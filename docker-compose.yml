@@ -1,0 +1,73 @@
+﻿version: "3.8"
+name: "aibolit-api"
+
+services:
+
+  auth-database:
+    image: postgres:latest
+    container_name: "auth-database"
+    volumes:
+      - userdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: "userDB"
+      POSTGRES_USER: "norma"
+      POSTGRES_PASSWORD: "norma"
+    restart: always
+    networks:
+      - auth-network
+
+
+
+
+  auth:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: "auth"
+    depends_on:
+      - auth-database
+    ports:
+      - "8081:8080"
+    environment:
+      KEYCLOAK_ADMIN: "admin"
+      KEYCLOAK_ADMIN_PASSWORD: "admin"
+      KC_PROXY: edge
+      DB_VENDOR: POSTGRES
+      DB_ADDR: auth-database
+      DB_DATABASE: userDB
+      DB_USER: norma
+      DB_SCHEMA: public
+      DB_PASSWORD: "norma"
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://auth-database:5432/userDB
+      KC_DB_USERNAME: "norma"
+      KC_DB_PASSWORD: "norma"
+    command:
+      - start-dev
+      - --import-realm
+    volumes:
+      - ./realms:/opt/keycloak/data/import
+    networks:
+      - auth-network
+    restart: always
+
+
+  backend-database:
+    ports:
+      - "5432:5432"
+    container_name: "backend-database"
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+    volumes:
+      - data:/var/lib/postgresql/data
+    networks:
+      - backend-network
+    restart: always
+
+volumes:
+  userdata:
+  data:
+
+networks:
+  auth-network:
+  backend-network:
