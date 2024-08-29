@@ -319,8 +319,44 @@
       ],
       "aibolit-api": [
         {
+          "id": "286e12a0-0c8c-43ee-9984-c1dbcdc42d24",
+          "name": "Administrator",
+          "description": "",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "3c1ea068-889a-4b5c-9e7b-c6683f64fe83",
+          "attributes": {}
+        },
+        {
           "id": "d2f95703-b21c-499c-9c8a-2c56902227b4",
           "name": "user",
+          "description": "",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "3c1ea068-889a-4b5c-9e7b-c6683f64fe83",
+          "attributes": {}
+        },
+        {
+          "id": "b45ff647-7c23-447f-9120-a924270e6b4a",
+          "name": "ChiefDoctor",
+          "description": "",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "3c1ea068-889a-4b5c-9e7b-c6683f64fe83",
+          "attributes": {}
+        },
+        {
+          "id": "dc075e41-a859-4986-9dcf-f5a3da8cbf72",
+          "name": "Patient",
+          "description": "",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "3c1ea068-889a-4b5c-9e7b-c6683f64fe83",
+          "attributes": {}
+        },
+        {
+          "id": "89ffc7f2-6179-4820-a1c3-ca8ad7593020",
+          "name": "Doctor",
           "description": "",
           "composite": false,
           "clientRole": true,
@@ -1397,12 +1433,15 @@
           "protocolMapper": "oidc-usermodel-client-role-mapper",
           "consentRequired": false,
           "config": {
-            "user.attribute": "foo",
             "introspection.token.claim": "true",
+            "multivalued": "true",
+            "userinfo.token.claim": "false",
+            "user.attribute": "foo",
+            "id.token.claim": "false",
+            "lightweight.claim": "false",
             "access.token.claim": "true",
             "claim.name": "resource_access.${client_id}.roles",
-            "jsonType.label": "String",
-            "multivalued": "true"
+            "jsonType.label": "String"
           }
         }
       ]

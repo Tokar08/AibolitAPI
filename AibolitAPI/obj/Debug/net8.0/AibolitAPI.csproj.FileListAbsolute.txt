@@ -1,6 +1,5 @@
 C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\appsettings.Development.json
 C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\appsettings.json
-C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\realms\realm-export.json
 C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\AibolitAPI.exe
 C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\AibolitAPI.deps.json
 C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\AibolitAPI.runtimeconfig.json
@@ -109,3 +108,17 @@ C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\obj\Debug\net8.0\Aib
 C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\obj\Debug\net8.0\ref\AibolitAPI.dll
 C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\AutoMapper.dll
 C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\AutoMapper.Extensions.Microsoft.DependencyInjection.dll
+C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\realms\aibolit-api-realm.json
+C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\Keycloak.AuthServices.Authentication.dll
+C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\Keycloak.AuthServices.Common.dll
+C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.OpenIdConnect.dll
+C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\Microsoft.IdentityModel.Abstractions.dll
+C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\Microsoft.IdentityModel.JsonWebTokens.dll
+C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\Microsoft.IdentityModel.Logging.dll
+C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.dll
+C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
+C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
+C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\BCrypt.Net-Next.dll

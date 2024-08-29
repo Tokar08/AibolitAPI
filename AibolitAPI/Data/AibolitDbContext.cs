@@ -9,7 +9,7 @@ public class AibolitDbContext : DbContext
         : base(options)
     {
     }
-
+    
     public DbSet<Doctor> Doctors { get; set; }
     public DbSet<Administrator> Administrators { get; set; }
     public DbSet<Patient> Patients { get; set; }
@@ -23,6 +23,7 @@ public class AibolitDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        
         modelBuilder.Entity<User>().UseTpcMappingStrategy();
 
         modelBuilder.Entity<Doctor>()
