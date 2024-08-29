@@ -13,4 +13,5 @@ public class Prescription
     public string MedicationName { get; set; }
     public string Dosage { get; set; }
     public string Instructions { get; set; }
+    public bool IsActive { get; set; } 
 }

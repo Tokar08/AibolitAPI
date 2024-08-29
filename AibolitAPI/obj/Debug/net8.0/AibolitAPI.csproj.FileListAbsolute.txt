@@ -107,3 +107,5 @@ C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\obj\Debug\net8.0\ref
 C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\obj\Debug\net8.0\AibolitAPI.pdb
 C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\obj\Debug\net8.0\AibolitAPI.genruntimeconfig.cache
 C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\obj\Debug\net8.0\ref\AibolitAPI.dll
+C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\AutoMapper.dll
+C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\AutoMapper.Extensions.Microsoft.DependencyInjection.dll

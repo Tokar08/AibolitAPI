@@ -11,4 +11,5 @@ public class MedicalRecord
     public virtual ICollection<Appointment> Appointments { get; set; }
     public virtual ICollection<Prescription> Prescriptions { get; set; }
     public virtual ICollection<Recommendation> Recommendations { get; set; }
+    public bool IsActive { get; set; }
 }

@@ -11,4 +11,5 @@ public class Appointment
     public virtual MedicalRecord MedicalRecord { get; set; }
     public DateTime AppointmentDate { get; set; }
     public bool IsScheduled { get; set; }
+    public bool IsActive { get; set; } 
 }

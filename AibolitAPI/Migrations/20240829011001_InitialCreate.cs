@@ -44,7 +44,8 @@ namespace AibolitAPI.Migrations
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     Message = table.Column<string>(type: "text", nullable: false),
                     NotificationDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    IsRead = table.Column<bool>(type: "boolean", nullable: false)
+                    IsRead = table.Column<bool>(type: "boolean", nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -74,7 +75,8 @@ namespace AibolitAPI.Migrations
                     DoctorId = table.Column<Guid>(type: "uuid", nullable: false),
                     MedicalRecordId = table.Column<Guid>(type: "uuid", nullable: false),
                     AppointmentDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    IsScheduled = table.Column<bool>(type: "boolean", nullable: false)
+                    IsScheduled = table.Column<bool>(type: "boolean", nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -141,7 +143,8 @@ namespace AibolitAPI.Migrations
                     Title = table.Column<string>(type: "text", nullable: false),
                     Address = table.Column<string>(type: "text", nullable: false),
                     ChiefDoctorId = table.Column<Guid>(type: "uuid", nullable: false),
-                    AdministratorId = table.Column<Guid>(type: "uuid", nullable: true)
+                    AdministratorId = table.Column<Guid>(type: "uuid", nullable: true),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -167,7 +170,8 @@ namespace AibolitAPI.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     PatientId = table.Column<Guid>(type: "uuid", nullable: false),
                     DoctorId = table.Column<Guid>(type: "uuid", nullable: false),
-                    RecordDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    RecordDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -252,7 +256,8 @@ namespace AibolitAPI.Migrations
                     PrescriptionDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     MedicationName = table.Column<string>(type: "text", nullable: false),
                     Dosage = table.Column<string>(type: "text", nullable: false),
-                    Instructions = table.Column<string>(type: "text", nullable: false)
+                    Instructions = table.Column<string>(type: "text", nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -286,7 +291,8 @@ namespace AibolitAPI.Migrations
                     DoctorId = table.Column<Guid>(type: "uuid", nullable: false),
                     MedicalRecordId = table.Column<Guid>(type: "uuid", nullable: false),
                     Content = table.Column<string>(type: "text", nullable: false),
-                    RecommendationDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    RecommendationDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {

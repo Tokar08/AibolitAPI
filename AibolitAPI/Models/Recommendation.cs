@@ -11,4 +11,5 @@ public class Recommendation
     public virtual MedicalRecord MedicalRecord { get; set; }
     public string Content { get; set; }
     public DateTime RecommendationDate { get; set; }
+    public bool IsActive { get; set; } 
 }

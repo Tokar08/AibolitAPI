@@ -7,11 +7,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
-builder.Services.AddControllers();
+
 builder.Services.AddDbContext<AibolitDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
         .UseLazyLoadingProxies()
 );
+
+builder.Services.AddAutoMapper(typeof(Program));
 
 
 

@@ -8,4 +8,5 @@ public class Notification
     public string Message { get; set; }
     public DateTime NotificationDate { get; set; }
     public bool IsRead { get; set; }
+    public bool IsActive { get; set; } 
 }

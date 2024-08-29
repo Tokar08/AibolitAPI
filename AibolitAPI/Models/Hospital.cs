@@ -12,4 +12,5 @@ public class Hospital
     public virtual Administrator Administrator { get; set; }
         
     public virtual ICollection<Doctor> Staff { get; set; } 
+    public bool IsActive { get; set; }
 }

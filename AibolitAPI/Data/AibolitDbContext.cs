@@ -104,6 +104,16 @@ public class AibolitDbContext : DbContext
             .HasForeignKey(n => n.UserId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        
+        modelBuilder.Entity<User>().HasQueryFilter(u => u.IsActive);
+        modelBuilder.Entity<Appointment>().HasQueryFilter(a => a.IsActive);
+        modelBuilder.Entity<Hospital>().HasQueryFilter(h => h.IsActive);
+        modelBuilder.Entity<MedicalRecord>().HasQueryFilter(m => m.IsActive);
+        modelBuilder.Entity<Prescription>().HasQueryFilter(p => p.IsActive);
+        modelBuilder.Entity<Recommendation>().HasQueryFilter(r => r.IsActive);
+        modelBuilder.Entity<Notification>().HasQueryFilter(n => n.IsActive);
+       
+        
         base.OnModelCreating(modelBuilder);
     }
 }
