@@ -1,9 +1,8 @@
 ﻿namespace AibolitAPI.Models;
 
-public enum Role
+public class Role
 {
-    Patient,
-    Doctor,
-    ChiefDoctor,
-    Administrator
+    public Guid Id { get; set; }
+    public string Title { get; set; } 
+    public virtual ICollection<User> Users { get; set; }
 }

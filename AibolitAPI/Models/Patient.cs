@@ -1,9 +1,13 @@
 ﻿namespace AibolitAPI.Models;
 
-public class Patient : User
+public class Patient
 {
-    public virtual ICollection<Doctor> Doctors { get; set; }
+    public Guid Id { get; set; }
+    public Guid UserId { get; set; }
+    public virtual User User { get; set; }
     public Guid MedicalRecordId { get; set; }
     public virtual MedicalRecord MedicalRecord { get; set; }
-    public virtual ICollection<Doctor> LikedDoctors { get; set; } 
+    public virtual ICollection<Doctor> Doctors { get; set; }
+    public virtual ICollection<Doctor> LikedDoctors { get; set; }
+    public bool IsActive { get; set; }
 }

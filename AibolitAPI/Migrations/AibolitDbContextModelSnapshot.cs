@@ -25,6 +25,28 @@ namespace AibolitAPI.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("AibolitAPI.Models.Administrator", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("ManagedHospitalId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Administrators", (string)null);
+                });
+
             modelBuilder.Entity("AibolitAPI.Models.Appointment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -58,6 +80,47 @@ namespace AibolitAPI.Migrations
                     b.HasIndex("PatientId");
 
                     b.ToTable("Appointments");
+                });
+
+            modelBuilder.Entity("AibolitAPI.Models.Doctor", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("AdministratorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("HospitalId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Specialization")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("VisitCount")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("WorkScheduleId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AdministratorId");
+
+                    b.HasIndex("HospitalId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("WorkScheduleId");
+
+                    b.ToTable("Doctors", (string)null);
                 });
 
             modelBuilder.Entity("AibolitAPI.Models.Hospital", b =>
@@ -147,6 +210,36 @@ namespace AibolitAPI.Migrations
                     b.ToTable("Notifications");
                 });
 
+            modelBuilder.Entity("AibolitAPI.Models.Patient", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("AdministratorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("MedicalRecordId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AdministratorId");
+
+                    b.HasIndex("MedicalRecordId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Patients", (string)null);
+                });
+
             modelBuilder.Entity("AibolitAPI.Models.Prescription", b =>
                 {
                     b.Property<Guid>("Id")
@@ -227,6 +320,21 @@ namespace AibolitAPI.Migrations
                     b.ToTable("Recommendations");
                 });
 
+            modelBuilder.Entity("AibolitAPI.Models.Role", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Roles");
+                });
+
             modelBuilder.Entity("AibolitAPI.Models.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -270,8 +378,8 @@ namespace AibolitAPI.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("Role")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -282,9 +390,9 @@ namespace AibolitAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable((string)null);
+                    b.HasIndex("RoleId");
 
-                    b.UseTpcMappingStrategy();
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("AibolitAPI.Models.WorkSchedule", b =>
@@ -340,59 +448,13 @@ namespace AibolitAPI.Migrations
 
             modelBuilder.Entity("AibolitAPI.Models.Administrator", b =>
                 {
-                    b.HasBaseType("AibolitAPI.Models.User");
+                    b.HasOne("AibolitAPI.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Property<Guid>("ManagedHospitalId")
-                        .HasColumnType("uuid");
-
-                    b.ToTable("Administrators", (string)null);
-                });
-
-            modelBuilder.Entity("AibolitAPI.Models.Doctor", b =>
-                {
-                    b.HasBaseType("AibolitAPI.Models.User");
-
-                    b.Property<Guid?>("AdministratorId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("HospitalId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Specialization")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("VisitCount")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("WorkScheduleId")
-                        .HasColumnType("uuid");
-
-                    b.HasIndex("AdministratorId");
-
-                    b.HasIndex("HospitalId");
-
-                    b.HasIndex("WorkScheduleId");
-
-                    b.ToTable("Doctors", (string)null);
-                });
-
-            modelBuilder.Entity("AibolitAPI.Models.Patient", b =>
-                {
-                    b.HasBaseType("AibolitAPI.Models.User");
-
-                    b.Property<Guid?>("AdministratorId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("MedicalRecordId")
-                        .HasColumnType("uuid");
-
-                    b.HasIndex("AdministratorId");
-
-                    b.HasIndex("MedicalRecordId")
-                        .IsUnique();
-
-                    b.ToTable("Patients", (string)null);
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("AibolitAPI.Models.Appointment", b =>
@@ -420,6 +482,38 @@ namespace AibolitAPI.Migrations
                     b.Navigation("MedicalRecord");
 
                     b.Navigation("Patient");
+                });
+
+            modelBuilder.Entity("AibolitAPI.Models.Doctor", b =>
+                {
+                    b.HasOne("AibolitAPI.Models.Administrator", null)
+                        .WithMany("Doctors")
+                        .HasForeignKey("AdministratorId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AibolitAPI.Models.Hospital", "Hospital")
+                        .WithMany("Staff")
+                        .HasForeignKey("HospitalId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AibolitAPI.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AibolitAPI.Models.WorkSchedule", "WorkSchedule")
+                        .WithMany()
+                        .HasForeignKey("WorkScheduleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Hospital");
+
+                    b.Navigation("User");
+
+                    b.Navigation("WorkSchedule");
                 });
 
             modelBuilder.Entity("AibolitAPI.Models.Hospital", b =>
@@ -458,6 +552,30 @@ namespace AibolitAPI.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("AibolitAPI.Models.Patient", b =>
+                {
+                    b.HasOne("AibolitAPI.Models.Administrator", null)
+                        .WithMany("Patients")
+                        .HasForeignKey("AdministratorId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AibolitAPI.Models.MedicalRecord", "MedicalRecord")
+                        .WithOne("Patient")
+                        .HasForeignKey("AibolitAPI.Models.Patient", "MedicalRecordId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AibolitAPI.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MedicalRecord");
 
                     b.Navigation("User");
                 });
@@ -516,6 +634,17 @@ namespace AibolitAPI.Migrations
                     b.Navigation("Patient");
                 });
 
+            modelBuilder.Entity("AibolitAPI.Models.User", b =>
+                {
+                    b.HasOne("AibolitAPI.Models.Role", "Role")
+                        .WithMany("Users")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Role");
+                });
+
             modelBuilder.Entity("DoctorPatient", b =>
                 {
                     b.HasOne("AibolitAPI.Models.Doctor", null)
@@ -546,42 +675,14 @@ namespace AibolitAPI.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("AibolitAPI.Models.Doctor", b =>
+            modelBuilder.Entity("AibolitAPI.Models.Administrator", b =>
                 {
-                    b.HasOne("AibolitAPI.Models.Administrator", null)
-                        .WithMany("Doctors")
-                        .HasForeignKey("AdministratorId");
+                    b.Navigation("Doctors");
 
-                    b.HasOne("AibolitAPI.Models.Hospital", "Hospital")
-                        .WithMany("Staff")
-                        .HasForeignKey("HospitalId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                    b.Navigation("ManagedHospital")
                         .IsRequired();
 
-                    b.HasOne("AibolitAPI.Models.WorkSchedule", "WorkSchedule")
-                        .WithMany()
-                        .HasForeignKey("WorkScheduleId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Hospital");
-
-                    b.Navigation("WorkSchedule");
-                });
-
-            modelBuilder.Entity("AibolitAPI.Models.Patient", b =>
-                {
-                    b.HasOne("AibolitAPI.Models.Administrator", null)
-                        .WithMany("Patients")
-                        .HasForeignKey("AdministratorId");
-
-                    b.HasOne("AibolitAPI.Models.MedicalRecord", "MedicalRecord")
-                        .WithOne("Patient")
-                        .HasForeignKey("AibolitAPI.Models.Patient", "MedicalRecordId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("MedicalRecord");
+                    b.Navigation("Patients");
                 });
 
             modelBuilder.Entity("AibolitAPI.Models.Hospital", b =>
@@ -601,14 +702,9 @@ namespace AibolitAPI.Migrations
                     b.Navigation("Recommendations");
                 });
 
-            modelBuilder.Entity("AibolitAPI.Models.Administrator", b =>
+            modelBuilder.Entity("AibolitAPI.Models.Role", b =>
                 {
-                    b.Navigation("Doctors");
-
-                    b.Navigation("ManagedHospital")
-                        .IsRequired();
-
-                    b.Navigation("Patients");
+                    b.Navigation("Users");
                 });
 #pragma warning restore 612, 618
         }
