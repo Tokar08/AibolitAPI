@@ -12,6 +12,20 @@ namespace AibolitAPI.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "Hospitals",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Title = table.Column<string>(type: "text", nullable: false),
+                    Address = table.Column<string>(type: "text", nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Hospitals", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Roles",
                 columns: table => new
                 {
@@ -72,13 +86,19 @@ namespace AibolitAPI.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     ManagedHospitalId = table.Column<Guid>(type: "uuid", nullable: false),
-                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Administrators", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Administrators_Hospitals_ManagedHospitalId",
+                        column: x => x.ManagedHospitalId,
+                        principalTable: "Hospitals",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Administrators_Users_UserId",
                         column: x => x.UserId,
@@ -110,46 +130,17 @@ namespace AibolitAPI.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Appointments",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    PatientId = table.Column<Guid>(type: "uuid", nullable: false),
-                    DoctorId = table.Column<Guid>(type: "uuid", nullable: false),
-                    MedicalRecordId = table.Column<Guid>(type: "uuid", nullable: false),
-                    AppointmentDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    IsScheduled = table.Column<bool>(type: "boolean", nullable: false),
-                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Appointments", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "DoctorPatient",
-                columns: table => new
-                {
-                    DoctorId = table.Column<Guid>(type: "uuid", nullable: false),
-                    PatientId = table.Column<Guid>(type: "uuid", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_DoctorPatient", x => new { x.DoctorId, x.PatientId });
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Doctors",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     Specialization = table.Column<string>(type: "text", nullable: false),
                     WorkScheduleId = table.Column<Guid>(type: "uuid", nullable: false),
                     HospitalId = table.Column<Guid>(type: "uuid", nullable: false),
                     VisitCount = table.Column<int>(type: "integer", nullable: false),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    AdministratorId = table.Column<Guid>(type: "uuid", nullable: true)
+                    AdministratorId = table.Column<Guid>(type: "uuid", nullable: true),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -158,6 +149,12 @@ namespace AibolitAPI.Migrations
                         name: "FK_Doctors_Administrators_AdministratorId",
                         column: x => x.AdministratorId,
                         principalTable: "Administrators",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Doctors_Hospitals_HospitalId",
+                        column: x => x.HospitalId,
+                        principalTable: "Hospitals",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
@@ -170,34 +167,6 @@ namespace AibolitAPI.Migrations
                         name: "FK_Doctors_WorkSchedules_WorkScheduleId",
                         column: x => x.WorkScheduleId,
                         principalTable: "WorkSchedules",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Hospitals",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Title = table.Column<string>(type: "text", nullable: false),
-                    Address = table.Column<string>(type: "text", nullable: false),
-                    ChiefDoctorId = table.Column<Guid>(type: "uuid", nullable: false),
-                    AdministratorId = table.Column<Guid>(type: "uuid", nullable: true),
-                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Hospitals", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Hospitals_Administrators_AdministratorId",
-                        column: x => x.AdministratorId,
-                        principalTable: "Administrators",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Hospitals_Doctors_ChiefDoctorId",
-                        column: x => x.ChiefDoctorId,
-                        principalTable: "Doctors",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -252,6 +221,65 @@ namespace AibolitAPI.Migrations
                         name: "FK_Patients_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Appointments",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    PatientId = table.Column<Guid>(type: "uuid", nullable: false),
+                    DoctorId = table.Column<Guid>(type: "uuid", nullable: false),
+                    MedicalRecordId = table.Column<Guid>(type: "uuid", nullable: false),
+                    AppointmentDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    IsScheduled = table.Column<bool>(type: "boolean", nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Appointments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Appointments_Doctors_DoctorId",
+                        column: x => x.DoctorId,
+                        principalTable: "Doctors",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Appointments_MedicalRecords_MedicalRecordId",
+                        column: x => x.MedicalRecordId,
+                        principalTable: "MedicalRecords",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Appointments_Patients_PatientId",
+                        column: x => x.PatientId,
+                        principalTable: "Patients",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "DoctorPatient",
+                columns: table => new
+                {
+                    DoctorId = table.Column<Guid>(type: "uuid", nullable: false),
+                    PatientId = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DoctorPatient", x => new { x.DoctorId, x.PatientId });
+                    table.ForeignKey(
+                        name: "FK_DoctorPatient_Doctors_DoctorId",
+                        column: x => x.DoctorId,
+                        principalTable: "Doctors",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_DoctorPatient_Patients_PatientId",
+                        column: x => x.PatientId,
+                        principalTable: "Patients",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -353,6 +381,11 @@ namespace AibolitAPI.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Administrators_ManagedHospitalId",
+                table: "Administrators",
+                column: "ManagedHospitalId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Administrators_UserId",
                 table: "Administrators",
                 column: "UserId");
@@ -396,17 +429,6 @@ namespace AibolitAPI.Migrations
                 name: "IX_Doctors_WorkScheduleId",
                 table: "Doctors",
                 column: "WorkScheduleId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Hospitals_AdministratorId",
-                table: "Hospitals",
-                column: "AdministratorId",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Hospitals_ChiefDoctorId",
-                table: "Hospitals",
-                column: "ChiefDoctorId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_MedicalRecords_DoctorId",
@@ -473,71 +495,11 @@ namespace AibolitAPI.Migrations
                 name: "IX_Users_RoleId",
                 table: "Users",
                 column: "RoleId");
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_Appointments_Doctors_DoctorId",
-                table: "Appointments",
-                column: "DoctorId",
-                principalTable: "Doctors",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_Appointments_MedicalRecords_MedicalRecordId",
-                table: "Appointments",
-                column: "MedicalRecordId",
-                principalTable: "MedicalRecords",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Restrict);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_Appointments_Patients_PatientId",
-                table: "Appointments",
-                column: "PatientId",
-                principalTable: "Patients",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_DoctorPatient_Doctors_DoctorId",
-                table: "DoctorPatient",
-                column: "DoctorId",
-                principalTable: "Doctors",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_DoctorPatient_Patients_PatientId",
-                table: "DoctorPatient",
-                column: "PatientId",
-                principalTable: "Patients",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_Doctors_Hospitals_HospitalId",
-                table: "Doctors",
-                column: "HospitalId",
-                principalTable: "Hospitals",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Restrict);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_Administrators_Users_UserId",
-                table: "Administrators");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Doctors_Users_UserId",
-                table: "Doctors");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Hospitals_Doctors_ChiefDoctorId",
-                table: "Hospitals");
-
             migrationBuilder.DropTable(
                 name: "Appointments");
 
@@ -563,22 +525,22 @@ namespace AibolitAPI.Migrations
                 name: "MedicalRecords");
 
             migrationBuilder.DropTable(
-                name: "Users");
-
-            migrationBuilder.DropTable(
-                name: "Roles");
-
-            migrationBuilder.DropTable(
                 name: "Doctors");
 
             migrationBuilder.DropTable(
-                name: "Hospitals");
+                name: "Administrators");
 
             migrationBuilder.DropTable(
                 name: "WorkSchedules");
 
             migrationBuilder.DropTable(
-                name: "Administrators");
+                name: "Hospitals");
+
+            migrationBuilder.DropTable(
+                name: "Users");
+
+            migrationBuilder.DropTable(
+                name: "Roles");
         }
     }
 }

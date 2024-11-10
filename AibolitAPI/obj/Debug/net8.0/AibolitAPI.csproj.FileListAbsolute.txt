@@ -122,3 +122,4 @@ C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\Mic
 C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
 C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
 C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\BCrypt.Net-Next.dll
+C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\http-client.env.json

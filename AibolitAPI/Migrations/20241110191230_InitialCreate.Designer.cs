@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AibolitAPI.Migrations
 {
     [DbContext(typeof(AibolitDbContext))]
-    [Migration("20241105233454_InitialCreate")]
+    [Migration("20241110191230_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -44,6 +44,8 @@ namespace AibolitAPI.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ManagedHospitalId");
 
                     b.HasIndex("UserId");
 
@@ -136,12 +138,6 @@ namespace AibolitAPI.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Guid?>("AdministratorId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("ChiefDoctorId")
-                        .HasColumnType("uuid");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -150,11 +146,6 @@ namespace AibolitAPI.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AdministratorId")
-                        .IsUnique();
-
-                    b.HasIndex("ChiefDoctorId");
 
                     b.ToTable("Hospitals");
                 });
@@ -451,11 +442,19 @@ namespace AibolitAPI.Migrations
 
             modelBuilder.Entity("AibolitAPI.Models.Administrator", b =>
                 {
+                    b.HasOne("AibolitAPI.Models.Hospital", "ManagedHospital")
+                        .WithMany("Administrators")
+                        .HasForeignKey("ManagedHospitalId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("AibolitAPI.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("ManagedHospital");
 
                     b.Navigation("User");
                 });
@@ -495,7 +494,7 @@ namespace AibolitAPI.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("AibolitAPI.Models.Hospital", "Hospital")
-                        .WithMany("Staff")
+                        .WithMany("Doctors")
                         .HasForeignKey("HospitalId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -517,24 +516,6 @@ namespace AibolitAPI.Migrations
                     b.Navigation("User");
 
                     b.Navigation("WorkSchedule");
-                });
-
-            modelBuilder.Entity("AibolitAPI.Models.Hospital", b =>
-                {
-                    b.HasOne("AibolitAPI.Models.Administrator", "Administrator")
-                        .WithOne("ManagedHospital")
-                        .HasForeignKey("AibolitAPI.Models.Hospital", "AdministratorId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("AibolitAPI.Models.Doctor", "ChiefDoctor")
-                        .WithMany()
-                        .HasForeignKey("ChiefDoctorId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Administrator");
-
-                    b.Navigation("ChiefDoctor");
                 });
 
             modelBuilder.Entity("AibolitAPI.Models.MedicalRecord", b =>
@@ -682,15 +663,14 @@ namespace AibolitAPI.Migrations
                 {
                     b.Navigation("Doctors");
 
-                    b.Navigation("ManagedHospital")
-                        .IsRequired();
-
                     b.Navigation("Patients");
                 });
 
             modelBuilder.Entity("AibolitAPI.Models.Hospital", b =>
                 {
-                    b.Navigation("Staff");
+                    b.Navigation("Administrators");
+
+                    b.Navigation("Doctors");
                 });
 
             modelBuilder.Entity("AibolitAPI.Models.MedicalRecord", b =>

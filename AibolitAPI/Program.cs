@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using System.Text;
 using AibolitAPI.Data;
-using AibolitAPI.Interfaces;
+using AibolitAPI.Interfaces;using AibolitAPI.Models;
 using AibolitAPI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -61,6 +61,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+app.MapGet("/hello", () => "[]");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

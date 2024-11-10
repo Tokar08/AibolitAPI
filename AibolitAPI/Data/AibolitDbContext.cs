@@ -9,7 +9,7 @@ public class AibolitDbContext : DbContext
         : base(options)
     {
     }
-    
+
     public DbSet<User> Users { get; set; }
     public DbSet<Role> Roles { get; set; }
     public DbSet<Doctor> Doctors { get; set; }
@@ -25,12 +25,15 @@ public class AibolitDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // ---== User and Role ==---
         modelBuilder.Entity<User>()
             .HasOne(u => u.Role)
             .WithMany(r => r.Users)
             .HasForeignKey(u => u.RoleId)
             .OnDelete(DeleteBehavior.Restrict);
-        
+
+
+        // ---== Doctor ==---
         modelBuilder.Entity<Doctor>()
             .ToTable("Doctors");
 
@@ -42,7 +45,7 @@ public class AibolitDbContext : DbContext
 
         modelBuilder.Entity<Doctor>()
             .HasOne(d => d.Hospital)
-            .WithMany(h => h.Staff)
+            .WithMany(h => h.Doctors)
             .HasForeignKey(d => d.HospitalId)
             .OnDelete(DeleteBehavior.Restrict);
 
@@ -61,14 +64,16 @@ public class AibolitDbContext : DbContext
                 "PatientDoctorLikes",
                 j => j.HasOne<Patient>().WithMany().HasForeignKey("PatientId"),
                 j => j.HasOne<Doctor>().WithMany().HasForeignKey("DoctorId"));
-        
+
+
+        // ---== Administrator ==---
         modelBuilder.Entity<Administrator>()
             .ToTable("Administrators");
 
         modelBuilder.Entity<Administrator>()
             .HasOne(a => a.ManagedHospital)
-            .WithOne(h => h.Administrator)
-            .HasForeignKey<Hospital>(h => h.AdministratorId)
+            .WithMany(h => h.Administrators)
+            .HasForeignKey(a => a.ManagedHospitalId)
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Administrator>()
@@ -80,7 +85,9 @@ public class AibolitDbContext : DbContext
             .HasMany(a => a.Patients)
             .WithOne()
             .OnDelete(DeleteBehavior.Restrict);
-        
+ 
+
+        // ---== Patient ==---
         modelBuilder.Entity<Patient>()
             .ToTable("Patients");
 
@@ -89,19 +96,23 @@ public class AibolitDbContext : DbContext
             .WithOne(mr => mr.Patient)
             .HasForeignKey<Patient>(p => p.MedicalRecordId)
             .OnDelete(DeleteBehavior.Restrict);
-        
-        modelBuilder.Entity<Hospital>()
-            .HasOne(h => h.ChiefDoctor)
-            .WithMany()
-            .HasForeignKey(h => h.ChiefDoctorId)
-            .OnDelete(DeleteBehavior.Restrict);
 
+
+        // ---== Hospital ==---
         modelBuilder.Entity<Hospital>()
-            .HasMany(h => h.Staff)
+            .HasMany(h => h.Doctors) 
             .WithOne(d => d.Hospital)
             .HasForeignKey(d => d.HospitalId)
             .OnDelete(DeleteBehavior.Restrict);
-        
+
+        modelBuilder.Entity<Hospital>()
+            .HasMany(h => h.Administrators)
+            .WithOne(a => a.ManagedHospital)
+            .HasForeignKey(a => a.ManagedHospitalId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // ---== MedicalRecord ==---
         modelBuilder.Entity<MedicalRecord>()
             .HasMany(mr => mr.Appointments)
             .WithOne(a => a.MedicalRecord)
@@ -119,13 +130,17 @@ public class AibolitDbContext : DbContext
             .WithOne(r => r.MedicalRecord)
             .HasForeignKey(r => r.MedicalRecordId)
             .OnDelete(DeleteBehavior.Restrict);
-        
+
+
+        // ---== Notification ==---
         modelBuilder.Entity<Notification>()
             .HasOne(n => n.User)
             .WithMany()
             .HasForeignKey(n => n.UserId)
             .OnDelete(DeleteBehavior.Restrict);
         
+
+        // ---== Filters for Active Entities ==---
         // Фильтрация только активных пользователей
         modelBuilder.Entity<User>().HasQueryFilter(u => u.IsActive);
 

@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "6924+19ng4FZ5Qo5BnyHQzq9iTTDlc5f7c15brSHsWtdh1ifM4/1xzpWPghCXtpc9djcE/OcYqV7iDVhUhohZA==",
+  "dgSpecHash": "Yw9vM3Z/hMl/5NQhU/kxTGodGKsNbPn/D19hNlgn9dBx33eYy7CLLjSHdJZWyYjeMNWfu9aZslgmYx3ql6LY/w==",
   "success": true,
   "projectFilePath": "C:\\Users\\kagu_rhick\\source\\ASP.NET_HW\\AibolitAPI\\AibolitAPI\\AibolitAPI.csproj",
   "expectedPackageFiles": [
@@ -10,6 +10,7 @@
     "C:\\Users\\kagu_rhick\\.nuget\\packages\\castle.core\\5.1.1\\castle.core.5.1.1.nupkg.sha512",
     "C:\\Users\\kagu_rhick\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "C:\\Users\\kagu_rhick\\.nuget\\packages\\keycloak.authservices.authentication\\2.5.3\\keycloak.authservices.authentication.2.5.3.nupkg.sha512",
+    "C:\\Users\\kagu_rhick\\.nuget\\packages\\keycloak.authservices.common\\2.5.3\\keycloak.authservices.common.2.5.3.nupkg.sha512",
     "C:\\Users\\kagu_rhick\\.nuget\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\8.0.8\\microsoft.aspnetcore.authentication.jwtbearer.8.0.8.nupkg.sha512",
     "C:\\Users\\kagu_rhick\\.nuget\\packages\\microsoft.aspnetcore.authentication.openidconnect\\6.0.29\\microsoft.aspnetcore.authentication.openidconnect.6.0.29.nupkg.sha512",
     "C:\\Users\\kagu_rhick\\.nuget\\packages\\microsoft.bcl.asyncinterfaces\\6.0.0\\microsoft.bcl.asyncinterfaces.6.0.0.nupkg.sha512",
@@ -31,6 +32,7 @@
     "C:\\Users\\kagu_rhick\\.nuget\\packages\\microsoft.extensions.caching.memory\\8.0.0\\microsoft.extensions.caching.memory.8.0.0.nupkg.sha512",
     "C:\\Users\\kagu_rhick\\.nuget\\packages\\microsoft.extensions.configuration\\8.0.0\\microsoft.extensions.configuration.8.0.0.nupkg.sha512",
     "C:\\Users\\kagu_rhick\\.nuget\\packages\\microsoft.extensions.configuration.abstractions\\8.0.0\\microsoft.extensions.configuration.abstractions.8.0.0.nupkg.sha512",
+    "C:\\Users\\kagu_rhick\\.nuget\\packages\\microsoft.extensions.configuration.binder\\8.0.0\\microsoft.extensions.configuration.binder.8.0.0.nupkg.sha512",
     "C:\\Users\\kagu_rhick\\.nuget\\packages\\microsoft.extensions.configuration.fileextensions\\8.0.0\\microsoft.extensions.configuration.fileextensions.8.0.0.nupkg.sha512",
     "C:\\Users\\kagu_rhick\\.nuget\\packages\\microsoft.extensions.configuration.json\\8.0.0\\microsoft.extensions.configuration.json.8.0.0.nupkg.sha512",
     "C:\\Users\\kagu_rhick\\.nuget\\packages\\microsoft.extensions.dependencyinjection\\8.0.0\\microsoft.extensions.dependencyinjection.8.0.0.nupkg.sha512",

@@ -2,73 +2,89 @@
 using AibolitAPI.DTOs;
 using AibolitAPI.Models;
 
-namespace AibolitAPI.Mappers
-{
-    public class MapperProfile : Profile
+namespace AibolitAPI.Mappers;
+
+   public class MapperProfile : Profile
     {
         public MapperProfile()
         {
-            // CreateMap<Doctor, DoctorDTO>()
-            //     .ForMember(dto => dto.FullName, opt => opt.MapFrom(model => $"{model.FirstName} {model.LastName}"))
-            //     .ForMember(dto => dto.Specialization, opt => opt.MapFrom(model => model.Specialization))
-            //     .ForMember(dto => dto.HospitalTitle, opt => opt.MapFrom(model => model.Hospital.Title))
-            //     .ForMember(dto => dto.VisitCount, opt => opt.MapFrom(model => model.VisitCount))
-            //     .ForMember(dto => dto.IsActive, opt => opt.MapFrom(model => model.IsActive));
-            //
-            // CreateMap<Patient, PatientDTO>()
-            //     .ForMember(dto => dto.FullName, opt => opt.MapFrom(model => $"{model.FirstName} {model.LastName}"))
-            //     .ForMember(dto => dto.BirthDate, opt => opt.MapFrom(model => model.BirthDate))
-            //     .ForMember(dto => dto.Gender, opt => opt.MapFrom(model => model.Gender))
-            //     .ForMember(dto => dto.PhoneNumber, opt => opt.MapFrom(model => model.PhoneNumber))
-            //     .ForMember(dto => dto.Email, opt => opt.MapFrom(model => model.Email))
-            //     .ForMember(dto => dto.IsActive, opt => opt.MapFrom(model => model.IsActive));
-            //
-            // CreateMap<Appointment, AppointmentDTO>()
-            //     .ForMember(dto => dto.PatientFullName, opt => opt.MapFrom(model => $"{model.Patient.FirstName} {model.Patient.LastName}"))
-            //     .ForMember(dto => dto.DoctorFullName, opt => opt.MapFrom(model => $"{model.Doctor.FirstName} {model.Doctor.LastName}"))
-            //     .ForMember(dto => dto.AppointmentDate, opt => opt.MapFrom(model => model.AppointmentDate))
-            //     .ForMember(dto => dto.IsScheduled, opt => opt.MapFrom(model => model.IsScheduled))
-            //     .ForMember(dto => dto.IsActive, opt => opt.MapFrom(model => model.IsActive));
-            //
-            // CreateMap<Hospital, HospitalDTO>()
-            //     .ForMember(dto => dto.ChiefDoctorFullName, opt => opt.MapFrom(model => $"{model.ChiefDoctor.FirstName} {model.ChiefDoctor.LastName}"))
-            //     .ForMember(dto => dto.Title, opt => opt.MapFrom(model => model.Title))
-            //     .ForMember(dto => dto.Address, opt => opt.MapFrom(model => model.Address))
-            //     .ForMember(dto => dto.IsActive, opt => opt.MapFrom(model => model.IsActive));
-            //
-            // CreateMap<Prescription, PrescriptionDTO>()
-            //     .ForMember(dto => dto.PatientFullName, opt => opt.MapFrom(model => $"{model.Patient.FirstName} {model.Patient.LastName}"))
-            //     .ForMember(dto => dto.DoctorFullName, opt => opt.MapFrom(model => $"{model.PrescribedBy.FirstName} {model.PrescribedBy.LastName}"))
-            //     .ForMember(dto => dto.PrescriptionDate, opt => opt.MapFrom(model => model.PrescriptionDate))
-            //     .ForMember(dto => dto.MedicationName, opt => opt.MapFrom(model => model.MedicationName))
-            //     .ForMember(dto => dto.Dosage, opt => opt.MapFrom(model => model.Dosage))
-            //     .ForMember(dto => dto.Instructions, opt => opt.MapFrom(model => model.Instructions))
-            //     .ForMember(dto => dto.IsActive, opt => opt.MapFrom(model => model.IsActive));
-            //
-            // CreateMap<Recommendation, RecommendationDTO>()
-            //     .ForMember(dto => dto.PatientFullName, opt => opt.MapFrom(model => $"{model.Patient.FirstName} {model.Patient.LastName}"))
-            //     .ForMember(dto => dto.DoctorFullName, opt => opt.MapFrom(model => $"{model.GivenBy.FirstName} {model.GivenBy.LastName}"))
-            //     .ForMember(dto => dto.RecommendationDate, opt => opt.MapFrom(model => model.RecommendationDate))
-            //     .ForMember(dto => dto.Content, opt => opt.MapFrom(model => model.Content))
-            //     .ForMember(dto => dto.IsActive, opt => opt.MapFrom(model => model.IsActive));
-            //
-            // CreateMap<User, UserDTO>()
-            //     .ForMember(dto => dto.FullName, opt => opt.MapFrom(model => $"{model.FirstName} {model.LastName}"))
-            //     .ForMember(dto => dto.Username, opt => opt.MapFrom(model => model.Username))
-            //     .ForMember(dto => dto.BirthDate, opt => opt.MapFrom(model => model.BirthDate))
-            //     .ForMember(dto => dto.Gender, opt => opt.MapFrom(model => model.Gender))
-            //     .ForMember(dto => dto.PhoneNumber, opt => opt.MapFrom(model => model.PhoneNumber))
-            //     .ForMember(dto => dto.Email, opt => opt.MapFrom(model => model.Email))
-            //     .ForMember(dto => dto.IsActive, opt => opt.MapFrom(model => model.IsActive));
-            //
-            // CreateMap<RegisterDTO, Patient>()
-            //     .ForMember(dest => dest.PasswordHash, opt => opt.Ignore())
-            //     .ForMember(dest => dest.FirstName, opt => opt.MapFrom(src => src.FirstName))
-            //     .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName))
-            //     .ForMember(dest => dest.Username, opt => opt.MapFrom(src => src.Username));
-            //
-            // CreateMap<LoginDTO, User>()
-            //     .ForMember(dest => dest.PasswordHash, opt => opt.Ignore());
+            // Mapping for User <-> UserDTO
+            CreateMap<User, UserDTO>().ReverseMap()
+                .MaxDepth(3);
+
+            // Mapping for Hospital <-> HospitalDTO
+            CreateMap<Hospital, HospitalDTO>().ReverseMap()
+                .MaxDepth(3);
+
+            // Mapping for Administrator <-> AdministratorDTO
+            CreateMap<Administrator, AdministratorDTO>()
+                .ForMember(dest => dest.ManagedHospital, opt => opt.MapFrom(src => src.ManagedHospital))
+                .ForMember(dest => dest.Doctors, opt => opt.MapFrom(src => src.Doctors))
+                .ForMember(dest => dest.Patients, opt => opt.MapFrom(src => src.Patients))
+                .ReverseMap()
+                .MaxDepth(3);
+
+            // Mapping for Doctor <-> DoctorDTO
+            CreateMap<Doctor, DoctorDTO>()
+                .ForMember(dest => dest.User, opt => opt.MapFrom(src => src.User))
+                .ForMember(dest => dest.WorkSchedule, opt => opt.MapFrom(src => src.WorkSchedule))
+                .ForMember(dest => dest.Hospital, opt => opt.MapFrom(src => src.Hospital))
+                .ForMember(dest => dest.Patients, opt => opt.MapFrom(src => src.Patients))
+                .ForMember(dest => dest.LikedByPatients, opt => opt.MapFrom(src => src.LikedByPatients))
+                .ReverseMap()
+                .MaxDepth(3);
+
+            // Mapping for Patient <-> PatientDTO
+            CreateMap<Patient, PatientDTO>()
+                .ForMember(dest => dest.User, opt => opt.MapFrom(src => src.User))
+                .ForMember(dest => dest.MedicalRecord, opt => opt.MapFrom(src => src.MedicalRecord))
+                .ForMember(dest => dest.Doctors, opt => opt.MapFrom(src => src.Doctors))
+                .ForMember(dest => dest.LikedDoctors, opt => opt.MapFrom(src => src.LikedDoctors))
+                .ReverseMap()
+                .MaxDepth(3);
+
+            // Mapping for MedicalRecord <-> MedicalRecordDTO
+            CreateMap<MedicalRecord, MedicalRecordDTO>()
+                .ForMember(dest => dest.Patient, opt => opt.MapFrom(src => src.Patient))
+                .ForMember(dest => dest.CreatedBy, opt => opt.MapFrom(src => src.CreatedBy))
+                .ForMember(dest => dest.Appointments, opt => opt.MapFrom(src => src.Appointments))
+                .ForMember(dest => dest.Prescriptions, opt => opt.MapFrom(src => src.Prescriptions))
+                .ForMember(dest => dest.Recommendations, opt => opt.MapFrom(src => src.Recommendations))
+                .ReverseMap()
+                .MaxDepth(3);
+
+            // Mapping for Appointment <-> AppointmentDTO
+            CreateMap<Appointment, AppointmentDTO>()
+                .ForMember(dest => dest.Patient, opt => opt.MapFrom(src => src.Patient))
+                .ForMember(dest => dest.Doctor, opt => opt.MapFrom(src => src.Doctor))
+                .ForMember(dest => dest.MedicalRecord, opt => opt.MapFrom(src => src.MedicalRecord))
+                .ReverseMap()
+                .MaxDepth(3);
+
+            // Mapping for Prescription <-> PrescriptionDTO
+            CreateMap<Prescription, PrescriptionDTO>()
+                .ForMember(dest => dest.Patient, opt => opt.MapFrom(src => src.Patient))
+                .ForMember(dest => dest.PrescribedBy, opt => opt.MapFrom(src => src.PrescribedBy))
+                .ForMember(dest => dest.MedicalRecord, opt => opt.MapFrom(src => src.MedicalRecord))
+                .ReverseMap()
+                .MaxDepth(3);
+
+            // Mapping for Recommendation <-> RecommendationDTO
+            CreateMap<Recommendation, RecommendationDTO>()
+                .ForMember(dest => dest.Patient, opt => opt.MapFrom(src => src.Patient))
+                .ForMember(dest => dest.GivenBy, opt => opt.MapFrom(src => src.GivenBy))
+                .ForMember(dest => dest.MedicalRecord, opt => opt.MapFrom(src => src.MedicalRecord))
+                .ReverseMap()
+                .MaxDepth(3);
+
+            // Mapping for WorkSchedule <-> WorkScheduleDTO
+            CreateMap<WorkSchedule, WorkScheduleDTO>().ReverseMap()
+                .MaxDepth(3);
+
+            // Mapping for Notification <-> NotificationDTO
+            CreateMap<Notification, NotificationDTO>()
+                .ForMember(dest => dest.User, opt => opt.MapFrom(src => src.User))
+                .ReverseMap()
+                .MaxDepth(3);
         }
     }
-}

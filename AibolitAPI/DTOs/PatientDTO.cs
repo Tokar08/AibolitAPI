@@ -3,10 +3,11 @@
 public class PatientDTO
 {
     public Guid Id { get; set; }
-    public string FullName { get; set; }
-    public DateTime BirthDate { get; set; }
-    public string Gender { get; set; }
-    public string PhoneNumber { get; set; }
-    public string Email { get; set; }
+    public Guid UserId { get; set; }
+    public UserDTO User { get; set; }
+    public Guid MedicalRecordId { get; set; }
+    public MedicalRecordDTO MedicalRecord { get; set; } 
+    public ICollection<DoctorDTO> Doctors { get; set; } 
+    public ICollection<DoctorDTO> LikedDoctors { get; set; } 
     public bool IsActive { get; set; }
 }

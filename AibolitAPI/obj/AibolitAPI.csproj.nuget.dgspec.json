@@ -34,11 +34,6 @@
           "warnAsError": [
             "NU1605"
           ]
-        },
-        "restoreAuditProperties": {
-          "enableAudit": "true",
-          "auditLevel": "low",
-          "auditMode": "direct"
         }
       },
       "frameworks": {
@@ -58,6 +53,10 @@
               "version": "[4.0.3, )"
             },
             "Keycloak.AuthServices.Authentication": {
+              "target": "Package",
+              "version": "[2.5.3, )"
+            },
+            "Keycloak.AuthServices.Common": {
               "target": "Package",
               "version": "[2.5.3, )"
             },

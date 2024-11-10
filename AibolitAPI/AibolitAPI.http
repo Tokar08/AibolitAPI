@@ -1,6 +1,6 @@
-@AibolitAPI_HostAddress = http://localhost:5138
+@AibolitAPI_HostAddress = http://localhost:44321
 
-GET {{AibolitAPI_HostAddress}}/weatherforecast/
-Accept: application/json
+GET {{AibolitAPI_HostAddress}}/hello
+Authorization: Bearer {{$auth.token("keycloak")}}
 
 ###
