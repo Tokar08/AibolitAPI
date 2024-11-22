@@ -1,76 +1,131 @@
-﻿using AibolitAPI.Data;
+﻿using AibolitAPI.DTOs;
 using AibolitAPI.Interfaces;
 using AibolitAPI.Models;
+using AutoMapper;
 
+namespace AibolitAPI.Services;
 
-namespace AibolitAPI.Services
+public class UserService
 {
-    public class UserService : IUserService
+    private readonly ILogger<UserService> _logger;
+    private readonly IMapper _mapper;
+    private readonly IUserRepository _userRepository;
+
+    public UserService(IUserRepository userRepository, IMapper mapper, ILogger<UserService> logger)
     {
-        private readonly AibolitDbContext _context;
-        private readonly ILogger<UserService> _logger;
+        _userRepository = userRepository;
+        _mapper = mapper;
+        _logger = logger;
+    }
 
-        public UserService(AibolitDbContext context, ILogger<UserService> logger)
+    public async Task<UserDTO> AuthenticateOrRegisterAsync(string username, string email, string name, string gender,
+        string address, string phoneNumber, DateTime birthDate)
+    {
+        try
         {
-            _context = context;
-            _logger = logger;
+            var existingUser = (await _userRepository.GetAllAsync(1, int.MaxValue))
+                .FirstOrDefault(u => u.Username == username || u.Email == email);
+
+            if (existingUser != null)
+                return _mapper.Map<UserDTO>(existingUser);
+
+            var defaultRole = await _userRepository.GetRoleByNameAsync("Patient")
+                              ?? throw new Exception("Default role 'Patient' not found in database");
+
+            var nameParts = name?.Split(' ') ?? Array.Empty<string>();
+            var newUser = new User
+            {
+                Id = Guid.NewGuid(),
+                Username = username,
+                FirstName = nameParts.FirstOrDefault() ?? string.Empty,
+                LastName = nameParts.Skip(1).FirstOrDefault() ?? string.Empty,
+                Email = email,
+                Gender = gender,
+                Address = address,
+                PhoneNumber = phoneNumber,
+                BirthDate = birthDate.ToUniversalTime(),
+                RoleId = defaultRole.Id,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            await _userRepository.CreateAsync(newUser);
+            return _mapper.Map<UserDTO>(newUser);
         }
-
-        public async Task RegisterAsync(Patient patient)
+        catch (Exception ex)
         {
-            // ArgumentNullException.ThrowIfNull(patient);
-            //
-            // if (string.IsNullOrWhiteSpace(patient.Email))
-            //     throw new ArgumentException("Email cannot be empty.");
-            //
-            // if (string.IsNullOrWhiteSpace(patient.PhoneNumber))
-            //     throw new ArgumentException("Phone number cannot be empty.");
-            //
-            // if (string.IsNullOrWhiteSpace(patient.PasswordHash))
-            //     throw new ArgumentException("Password cannot be empty.");
-            //
-            // if (string.IsNullOrWhiteSpace(patient.Username)) 
-            //     throw new ArgumentException("Username cannot be empty.");
-            //
-            // patient.PasswordHash = BCrypt.Net.BCrypt.HashPassword(patient.PasswordHash);
-            //
-            // try
-            // {
-            //     await _context.Patients.AddAsync(patient);
-            //     await _context.SaveChangesAsync();
-            // }
-            // catch (Exception ex)
-            // {
-            //     _logger.LogError(ex, "Error during registration");
-            //     throw new InvalidOperationException("An error occurred while saving the entity changes.", ex);
-            // }
+            _logger.LogError(ex, "Error occurred while authenticating or registering user.");
+            throw;
         }
+    }
 
-
-        public async Task<User> LoginAsync(string username, string password)
+    public async Task<IEnumerable<UserDTO>> GetAllAsync(int page, int size)
+    {
+        try
         {
-            // if (string.IsNullOrWhiteSpace(username))
-            //     throw new ArgumentException("Username cannot be empty.");
-            //
-            // if (string.IsNullOrWhiteSpace(password))
-            //     throw new ArgumentException("Password cannot be empty.");
-            //
-            // User? user;
-            //
-            // user = await _context.Patients.FindAsync(username);
-            // if (user != null && BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
-            //     return user;
-            //
-            // user = await _context.Doctors.FindAsync(username);
-            // if (user != null && BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
-            //     return user;
-            //
-            // user = await _context.Administrators.FindAsync(username);
-            // if (user != null && BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
-            //     return user;
-            //
-            // throw new UnauthorizedAccessException("Invalid username or password.");
-            return new User();
+            var users = await _userRepository.GetAllAsync(page, size);
+            return _mapper.Map<IEnumerable<UserDTO>>(users);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while getting all users.");
+            throw;
+        }
+    }
+
+    public async Task<UserDTO> GetByIdAsync(Guid id)
+    {
+        try
+        {
+            var user = await _userRepository.GetByIdAsync(id);
+            return _mapper.Map<UserDTO>(user);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error occurred while getting user with ID: {id}");
+            throw;
+        }
+    }
+
+    public async Task CreateAsync(UserDTO userDto)
+    {
+        try
+        {
+            var user = _mapper.Map<User>(userDto);
+            await _userRepository.CreateAsync(user);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while creating user.");
+            throw;
+        }
+    }
+
+    public async Task UpdateAsync(UserDTO userDto)
+    {
+        try
+        {
+            var user = _mapper.Map<User>(userDto);
+            await _userRepository.UpdateAsync(user);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while updating user.");
+            throw;
+        }
+    }
+
+    public async Task SoftDeleteAsync(Guid id)
+    {
+        try
+        {
+            await _userRepository.SoftDeleteAsync(id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error occurred while soft deleting user with ID: {id}");
+            throw;
         }
     }
 }

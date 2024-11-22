@@ -2,8 +2,4 @@
 
 namespace AibolitAPI.Interfaces;
 
-public interface IHospitalRepository : IRepository<Hospital>
-{
-    Task<Hospital> GetByIdAsync(Guid id);
-    Task UpdateAsync(Hospital hospital);
-}
+public interface IHospitalRepository : IRepository<Hospital>;
