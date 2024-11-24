@@ -18,13 +18,13 @@ public class KeycloakMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        using var scope = _scopeFactory.CreateScope();
-        var keycloakService = scope.ServiceProvider.GetRequiredService<KeycloakService>();
-
         var authorizationHeader = context.Request.Headers["Authorization"].FirstOrDefault();
         if (authorizationHeader?.StartsWith("Bearer ") == true)
         {
             var token = authorizationHeader.Substring("Bearer ".Length).Trim();
+
+            using var scope = _scopeFactory.CreateScope();
+            var keycloakService = scope.ServiceProvider.GetRequiredService<KeycloakService>();
             await keycloakService.ProcessTokenAsync(token);
         }
 

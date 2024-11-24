@@ -18,13 +18,12 @@ public class UserService
         _logger = logger;
     }
 
-    public async Task<UserDTO> AuthenticateOrRegisterAsync(string username, string email, string name, string gender,
-        string address, string phoneNumber, DateTime birthDate)
+    public async Task<UserDTO> AuthenticateOrRegisterAsync(string keycloakId)
     {
         try
         {
             var existingUser = (await _userRepository.GetAllAsync(1, int.MaxValue))
-                .FirstOrDefault(u => u.Username == username || u.Email == email);
+                .FirstOrDefault(u => u.KeycloakId == keycloakId);
 
             if (existingUser != null)
                 return _mapper.Map<UserDTO>(existingUser);
@@ -32,18 +31,10 @@ public class UserService
             var defaultRole = await _userRepository.GetRoleByNameAsync("Patient")
                               ?? throw new Exception("Default role 'Patient' not found in database");
 
-            var nameParts = name?.Split(' ') ?? Array.Empty<string>();
             var newUser = new User
             {
                 Id = Guid.NewGuid(),
-                Username = username,
-                FirstName = nameParts.FirstOrDefault() ?? string.Empty,
-                LastName = nameParts.Skip(1).FirstOrDefault() ?? string.Empty,
-                Email = email,
-                Gender = gender,
-                Address = address,
-                PhoneNumber = phoneNumber,
-                BirthDate = birthDate.ToUniversalTime(),
+                KeycloakId = keycloakId,
                 RoleId = defaultRole.Id,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow,

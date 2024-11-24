@@ -19,32 +19,22 @@ public class KeycloakService
         {
             var jwtToken = new JwtSecurityTokenHandler().ReadJwtToken(token);
 
-            var username = jwtToken.Claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
-            var email = jwtToken.Claims.FirstOrDefault(c => c.Type == "email")?.Value;
-            var name = jwtToken.Claims.FirstOrDefault(c => c.Type == "name")?.Value;
-            var gender = jwtToken.Claims.FirstOrDefault(c => c.Type == "gender")?.Value;
-            var address = jwtToken.Claims.FirstOrDefault(c => c.Type == "address")?.Value;
-            var phoneNumber = jwtToken.Claims.FirstOrDefault(c => c.Type == "phoneNumber")?.Value;
-            var birthDateString = jwtToken.Claims.FirstOrDefault(c => c.Type == "birthDate")?.Value;
+            var keycloakId = jwtToken.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
 
-            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(email))
+            if (string.IsNullOrEmpty(keycloakId))
             {
-                _logger.LogWarning("Insufficient data in token.");
+                _logger.LogWarning("Token does not contain a 'sub' claim (Keycloak ID).");
                 return;
             }
 
-            if (!DateTime.TryParse(birthDateString, out var birthDate))
-            {
-                _logger.LogWarning("Invalid birthDate format in token. Defaulting to DateTime.MinValue.");
-                birthDate = DateTime.MinValue;
-            }
+            var user = await _userService.AuthenticateOrRegisterAsync(keycloakId);
 
-            await _userService.AuthenticateOrRegisterAsync(username, email, name, gender, address, phoneNumber,
-                birthDate);
+            _logger.LogInformation("User authenticated or registered: {UserId}", user.Id);
         }
         catch (Exception ex)
         {
-            _logger.LogError("Error processing token: {Message}", ex.Message);
+            _logger.LogError(ex, "Error processing token.");
+            throw;
         }
     }
 }

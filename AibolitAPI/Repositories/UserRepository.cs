@@ -18,4 +18,10 @@ public class UserRepository : Repository<User>, IUserRepository
     {
         return (await _context.Roles.FirstOrDefaultAsync(r => r.Title == roleName))!;
     }
+
+    public async Task<User> GetUserByKeycloakId(string keycloakId)
+    {
+        return await _context.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId)
+               ?? throw new Exception("User not found.");
+    }
 }
