@@ -2,15 +2,15 @@
 using AibolitAPI.Interfaces;
 using AibolitAPI.Models;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 
 namespace AibolitAPI.Services;
-
 
 public class HospitalService
 {
     private readonly IHospitalRepository _hospitalRepository;
-    private readonly IMapper _mapper;
     private readonly ILogger<HospitalService> _logger;
+    private readonly IMapper _mapper;
 
     public HospitalService(IHospitalRepository hospitalRepository, IMapper mapper, ILogger<HospitalService> logger)
     {
@@ -23,7 +23,11 @@ public class HospitalService
     {
         try
         {
-            var hospitals = await _hospitalRepository.GetAllAsync(page, size);
+            var hospitals = await _hospitalRepository.GetAllAsync(page, size,
+                q => q
+                    .Include(h => h.Administrators)
+                    .Include(h => h.Doctors));
+
             return _mapper.Map<IEnumerable<HospitalDTO>>(hospitals);
         }
         catch (Exception ex)

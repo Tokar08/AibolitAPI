@@ -22,6 +22,13 @@ public class Repository<T> : IRepository<T> where T : class
         return await _dbSet.Skip((page - 1) * size).Take(size).ToListAsync();
     }
 
+    public async Task<IEnumerable<T>> GetAllAsync(int page, int size, Func<IQueryable<T>, IQueryable<T>> include)
+    {
+        var query = include(_dbSet);
+        return await query.Skip((page - 1) * size).Take(size).ToListAsync();
+    }
+
+
     public async Task<T> GetByIdAsync(Guid id)
     {
         return (await _dbSet.FindAsync(id))!;
