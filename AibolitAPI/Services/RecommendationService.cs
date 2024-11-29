@@ -2,16 +2,18 @@
 using AibolitAPI.Interfaces;
 using AibolitAPI.Models;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 
 namespace AibolitAPI.Services;
 
 public class RecommendationService
 {
-    private readonly IRecommendationRepository _recommendationRepository;
-    private readonly IMapper _mapper;
     private readonly ILogger<RecommendationService> _logger;
+    private readonly IMapper _mapper;
+    private readonly IRecommendationRepository _recommendationRepository;
 
-    public RecommendationService(IRecommendationRepository recommendationRepository, IMapper mapper, ILogger<RecommendationService> logger)
+    public RecommendationService(IRecommendationRepository recommendationRepository, IMapper mapper,
+        ILogger<RecommendationService> logger)
     {
         _recommendationRepository = recommendationRepository;
         _mapper = mapper;
@@ -22,7 +24,12 @@ public class RecommendationService
     {
         try
         {
-            var recommendations = await _recommendationRepository.GetAllAsync(page, size);
+            var recommendations = await _recommendationRepository.GetAllAsync(page, size,
+                recommendation => recommendation
+                    .Include(rec => rec.Patient)
+                    .Include(rec => rec.MedicalRecord)
+                    .Include(rec => rec.GivenBy)
+            );
             return _mapper.Map<IEnumerable<RecommendationDTO>>(recommendations);
         }
         catch (Exception ex)

@@ -2,16 +2,18 @@
 using AibolitAPI.Interfaces;
 using AibolitAPI.Models;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 
 namespace AibolitAPI.Services;
 
 public class PrescriptionService
 {
-    private readonly IPrescriptionRepository _prescriptionRepository;
-    private readonly IMapper _mapper;
     private readonly ILogger<PrescriptionService> _logger;
+    private readonly IMapper _mapper;
+    private readonly IPrescriptionRepository _prescriptionRepository;
 
-    public PrescriptionService(IPrescriptionRepository prescriptionRepository, IMapper mapper, ILogger<PrescriptionService> logger)
+    public PrescriptionService(IPrescriptionRepository prescriptionRepository, IMapper mapper,
+        ILogger<PrescriptionService> logger)
     {
         _prescriptionRepository = prescriptionRepository;
         _mapper = mapper;
@@ -22,7 +24,12 @@ public class PrescriptionService
     {
         try
         {
-            var prescriptions = await _prescriptionRepository.GetAllAsync(page, size);
+            var prescriptions = await _prescriptionRepository.GetAllAsync(page, size,
+                prescription => prescription
+                    .Include(p => p.MedicalRecord)
+                    .Include(p => p.PrescribedBy)
+                    .Include(p => p.Patient)
+            );
             return _mapper.Map<IEnumerable<PrescriptionDTO>>(prescriptions);
         }
         catch (Exception ex)

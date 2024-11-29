@@ -29,7 +29,7 @@ public class AppointmentController : ControllerBase
         }
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:guid}")]
     public async Task<ActionResult<AppointmentDTO>> GetByIdAsync(Guid id)
     {
         try

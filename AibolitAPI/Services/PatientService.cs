@@ -2,14 +2,15 @@
 using AibolitAPI.Interfaces;
 using AibolitAPI.Models;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 
 namespace AibolitAPI.Services;
 
 public class PatientService
 {
-    private readonly IPatientRepository _patientRepository;
-    private readonly IMapper _mapper;
     private readonly ILogger<PatientService> _logger;
+    private readonly IMapper _mapper;
+    private readonly IPatientRepository _patientRepository;
 
     public PatientService(IPatientRepository patientRepository, IMapper mapper, ILogger<PatientService> logger)
     {
@@ -22,7 +23,13 @@ public class PatientService
     {
         try
         {
-            var patients = await _patientRepository.GetAllAsync(page, size);
+            var patients = await _patientRepository.GetAllAsync(page, size,
+                patient => patient
+                    .Include(p => p.MedicalRecord)
+                    .Include(p => p.Doctors)
+                    .Include(p => p.User)
+                    .Include(p => p.LikedDoctors)
+            );
             return _mapper.Map<IEnumerable<PatientDTO>>(patients);
         }
         catch (Exception ex)

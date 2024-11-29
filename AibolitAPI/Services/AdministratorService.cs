@@ -56,7 +56,6 @@ public class AdministratorService
         {
             _logger.LogInformation("Начало создания администратора.");
 
-            // Находим больницу, к которой будем привязывать администратора
             _logger.LogInformation("Попытка найти больницу с ID: {ManagedHospitalId}",
                 administratorDto.ManagedHospitalId);
             var hospital = await _hospitalRepository.GetByIdAsync(administratorDto.ManagedHospitalId);
@@ -68,22 +67,22 @@ public class AdministratorService
 
             _logger.LogInformation("Больница с ID: {ManagedHospitalId} найдена.", administratorDto.ManagedHospitalId);
 
-            // Создаем администратора
+
             _logger.LogInformation("Маппинг AdministratorDTO в Administrator.");
             var administrator = _mapper.Map<Administrator>(administratorDto);
             _logger.LogInformation("Маппинг успешно выполнен. Администратор готов к сохранению.");
 
-            // Сохраняем администратора
+
             _logger.LogInformation("Попытка сохранить администратора с ID: {AdministratorId}.", administrator.Id);
             await _administratorRepository.CreateAsync(administrator);
             _logger.LogInformation("Администратор с ID: {AdministratorId} успешно сохранен.", administrator.Id);
 
-            // Добавляем администратора в коллекцию больницы
+
             _logger.LogInformation("Попытка добавить администратора в коллекцию больницы.");
             hospital.Administrators.Add(administrator);
             _logger.LogInformation("Администратор добавлен в коллекцию больницы.");
 
-            // Обновляем больницу и сохраняем изменения
+
             _logger.LogInformation("Попытка обновить больницу с ID: {ManagedHospitalId}.",
                 administratorDto.ManagedHospitalId);
             await _hospitalRepository.UpdateAsync(hospital);

@@ -1,4 +1,5 @@
-﻿using AibolitAPI.DTOs;
+﻿using AibolitAPI.Data;
+using AibolitAPI.DTOs;
 using AibolitAPI.Interfaces;
 using AibolitAPI.Models;
 using AutoMapper;
@@ -7,15 +8,18 @@ namespace AibolitAPI.Services;
 
 public class UserService
 {
+    private readonly AibolitDbContext _dbContext;
     private readonly ILogger<UserService> _logger;
     private readonly IMapper _mapper;
     private readonly IUserRepository _userRepository;
 
-    public UserService(IUserRepository userRepository, IMapper mapper, ILogger<UserService> logger)
+    public UserService(IUserRepository userRepository, IMapper mapper, ILogger<UserService> logger,
+        AibolitDbContext dbContext)
     {
         _userRepository = userRepository;
         _mapper = mapper;
         _logger = logger;
+        _dbContext = dbContext;
     }
 
     public async Task<UserDTO> AuthenticateOrRegisterAsync(string keycloakId)
@@ -42,6 +46,39 @@ public class UserService
             };
 
             await _userRepository.CreateAsync(newUser);
+
+
+            var medicalRecord = new MedicalRecord
+            {
+                Id = Guid.NewGuid(),
+                PatientId = newUser.Id,
+                DoctorId = null,
+                RecordDate = DateTime.UtcNow,
+                IsActive = true,
+                Appointments = new List<Appointment>(),
+                Prescriptions = new List<Prescription>(),
+                Recommendations = new List<Recommendation>()
+            };
+
+
+            _dbContext.MedicalRecords.Add(medicalRecord);
+            await _dbContext.SaveChangesAsync();
+
+
+            var newPatient = new Patient
+            {
+                Id = Guid.NewGuid(),
+                UserId = newUser.Id,
+                MedicalRecordId = medicalRecord.Id,
+                IsActive = true,
+                Doctors = new List<Doctor>(),
+                LikedDoctors = new List<Doctor>()
+            };
+
+
+            _dbContext.Patients.Add(newPatient);
+            await _dbContext.SaveChangesAsync();
+
             return _mapper.Map<UserDTO>(newUser);
         }
         catch (Exception ex)
@@ -49,6 +86,11 @@ public class UserService
             _logger.LogError(ex, "Error occurred while authenticating or registering user.");
             throw;
         }
+    }
+
+    public async Task<User> GetUserByKeycloakIdAsync(string keycloakId)
+    {
+        return await _userRepository.GetUserByKeycloakId(keycloakId);
     }
 
     public async Task<IEnumerable<UserDTO>> GetAllAsync(int page, int size)

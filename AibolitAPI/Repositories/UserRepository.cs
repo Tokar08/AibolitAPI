@@ -21,7 +21,9 @@ public class UserRepository : Repository<User>, IUserRepository
 
     public async Task<User> GetUserByKeycloakId(string keycloakId)
     {
-        return await _context.Users.FirstOrDefaultAsync(u => u.KeycloakId == keycloakId)
+        return await _context.Users
+                   .Include(u => u.Role)
+                   .FirstOrDefaultAsync(u => u.KeycloakId == keycloakId)
                ?? throw new Exception("User not found.");
     }
 }

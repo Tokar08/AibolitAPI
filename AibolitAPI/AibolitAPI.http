@@ -1,6 +1,6 @@
 @AibolitAPI_HostAddress = http://localhost:44321
 
-GET {{AibolitAPI_HostAddress}}
+GET {{AibolitAPI_HostAddress}}/api/Administrator
 Authorization: Bearer {{$auth.token("keycloak")}}
 
 ###

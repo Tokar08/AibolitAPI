@@ -4,7 +4,7 @@ public class MedicalRecordDTO
 {
     public Guid Id { get; set; }
     public Guid PatientId { get; set; }
-    public Guid DoctorId { get; set; }
+    public Guid? DoctorId { get; set; }
     public DateTime RecordDate { get; set; }
     public ICollection<AppointmentDTO>? Appointments { get; set; }
     public ICollection<PrescriptionDTO>? Prescriptions { get; set; }

@@ -1,3 +1,4 @@
+using AibolitAPI.Auth;
 using AibolitAPI.Data;
 using AibolitAPI.Interfaces;
 using AibolitAPI.Middleware;
@@ -54,6 +55,7 @@ builder.Services.AddScoped<RecommendationService>();
 builder.Services.AddScoped<IWorkScheduleRepository, WorkScheduleRepository>();
 builder.Services.AddScoped<WorkScheduleService>();
 
+builder.Services.AddScoped<IRoleValidator, RoleValidator>();
 builder.Services.AddScoped<KeycloakService>();
 // Настройка аутентификации Keycloak
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -69,6 +71,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidAudience = "aibolit-api",
             ValidateLifetime = true,
+            NameClaimType = "sub",
             ClockSkew = TimeSpan.Zero
         };
     });

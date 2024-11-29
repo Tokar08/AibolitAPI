@@ -19,7 +19,10 @@ public class Repository<T> : IRepository<T> where T : class
 
     public async Task<IEnumerable<T>> GetAllAsync(int page, int size)
     {
-        return await _dbSet.Skip((page - 1) * size).Take(size).ToListAsync();
+        return await _dbSet
+            .Skip((page - 1) * size)
+            .Take(size)
+            .ToListAsync();
     }
 
     public async Task<IEnumerable<T>> GetAllAsync(int page, int size, Func<IQueryable<T>, IQueryable<T>> include)
@@ -31,8 +34,10 @@ public class Repository<T> : IRepository<T> where T : class
 
     public async Task<T> GetByIdAsync(Guid id)
     {
-        return (await _dbSet.FindAsync(id))!;
+        return await _dbSet.FirstOrDefaultAsync(e => EF.Property<Guid>(e, "Id") == id)
+               ?? throw new InvalidOperationException("Entity not found.");
     }
+
 
     public async Task CreateAsync(T entity)
     {

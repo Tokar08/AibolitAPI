@@ -2,17 +2,18 @@
 using AibolitAPI.Interfaces;
 using AibolitAPI.Models;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 
 namespace AibolitAPI.Services;
-
 
 public class AppointmentService
 {
     private readonly IAppointmentRepository _appointmentRepository;
-    private readonly IMapper _mapper;
     private readonly ILogger<AppointmentService> _logger;
+    private readonly IMapper _mapper;
 
-    public AppointmentService(IAppointmentRepository appointmentRepository, IMapper mapper, ILogger<AppointmentService> logger)
+    public AppointmentService(IAppointmentRepository appointmentRepository, IMapper mapper,
+        ILogger<AppointmentService> logger)
     {
         _appointmentRepository = appointmentRepository;
         _mapper = mapper;
@@ -23,7 +24,12 @@ public class AppointmentService
     {
         try
         {
-            var appointments = await _appointmentRepository.GetAllAsync(page, size);
+            var appointments = await _appointmentRepository.GetAllAsync(page, size,
+                appointment => appointment
+                    .Include(a => a.Doctor)
+                    .Include(a => a.Patient)
+            );
+
             return _mapper.Map<IEnumerable<AppointmentDTO>>(appointments);
         }
         catch (Exception ex)
@@ -32,6 +38,7 @@ public class AppointmentService
             throw;
         }
     }
+
 
     public async Task<AppointmentDTO> GetByIdAsync(Guid id)
     {

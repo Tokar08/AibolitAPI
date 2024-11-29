@@ -1,4 +1,5 @@
-﻿using AibolitAPI.DTOs;
+﻿using AibolitAPI.Attributes;
+using AibolitAPI.DTOs;
 using AibolitAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,6 +17,7 @@ public class AdministratorController : ControllerBase
     }
 
     [HttpGet]
+    [AuthorizeRole("Admin")]
     public async Task<ActionResult<IEnumerable<AdministratorDTO>>> GetAllAsync(int page = 1, int size = 10)
     {
         try
@@ -29,7 +31,8 @@ public class AdministratorController : ControllerBase
         }
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:guid}")]
+    [AuthorizeRole("Patient")]
     public async Task<ActionResult<AdministratorDTO>> GetByIdAsync(Guid id)
     {
         try
@@ -76,6 +79,7 @@ public class AdministratorController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [AuthorizeRole("Admin")]
     public async Task<ActionResult> SoftDeleteAsync(Guid id)
     {
         try

@@ -34,7 +34,7 @@ public class MapperProfile : Profile
 
         // Mapping for Patient <-> PatientDTO
         CreateMap<Patient, PatientDTO>()
-           .ForMember(dest => dest.Doctors, opt => opt.MapFrom(src => src.Doctors))
+            .ForMember(dest => dest.Doctors, opt => opt.MapFrom(src => src.Doctors))
             .ForMember(dest => dest.LikedDoctors, opt => opt.MapFrom(src => src.LikedDoctors))
             .ReverseMap()
             .MaxDepth(3);
@@ -44,8 +44,8 @@ public class MapperProfile : Profile
             .ForMember(dest => dest.Appointments, opt => opt.MapFrom(src => src.Appointments))
             .ForMember(dest => dest.Prescriptions, opt => opt.MapFrom(src => src.Prescriptions))
             .ForMember(dest => dest.Recommendations, opt => opt.MapFrom(src => src.Recommendations))
-            .ReverseMap()
-            .MaxDepth(3);
+            .PreserveReferences() // предотвращает циклические ссылки
+            .ReverseMap();
 
         // Mapping for Appointment <-> AppointmentDTO
         CreateMap<Appointment, AppointmentDTO>()
