@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AibolitAPI.Migrations
 {
     [DbContext(typeof(AibolitDbContext))]
-    [Migration("20241124223259_InitialCreate")]
+    [Migration("20241129152125_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -153,7 +153,7 @@ namespace AibolitAPI.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("DoctorId")
+                    b.Property<Guid?>("DoctorId")
                         .HasColumnType("uuid");
 
                     b.Property<bool>("IsActive")
@@ -488,9 +488,7 @@ namespace AibolitAPI.Migrations
                 {
                     b.HasOne("AibolitAPI.Models.Doctor", "CreatedBy")
                         .WithMany()
-                        .HasForeignKey("DoctorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("DoctorId");
 
                     b.Navigation("CreatedBy");
                 });

@@ -24,10 +24,7 @@ public class AppointmentService
     {
         try
         {
-            var appointments = await _appointmentRepository.GetAllAsync(page, size,
-                appointment => appointment
-                    .Include(a => a.Doctor)
-                    .Include(a => a.Patient)
+            var appointments = await _appointmentRepository.GetAllAsync(page, size
             );
 
             return _mapper.Map<IEnumerable<AppointmentDTO>>(appointments);

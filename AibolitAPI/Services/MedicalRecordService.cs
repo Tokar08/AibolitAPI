@@ -24,12 +24,7 @@ public class MedicalRecordService
     {
         try
         {
-            var medicalRecords = await _medicalRecordRepository.GetAllAsync(page, size,
-                medicalRecord => medicalRecord
-                    .Include(mr => mr.Appointments)
-                    .Include(mr => mr.Patient)
-                    .Include(mr => mr.Prescriptions)
-                    .Include(mr => mr.Recommendations)
+            var medicalRecords = await _medicalRecordRepository.GetAllAsync(page, size
             );
             return _mapper.Map<IEnumerable<MedicalRecordDTO>>(medicalRecords);
         }

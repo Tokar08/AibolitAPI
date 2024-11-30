@@ -23,12 +23,7 @@ public class PatientService
     {
         try
         {
-            var patients = await _patientRepository.GetAllAsync(page, size,
-                patient => patient
-                    .Include(p => p.MedicalRecord)
-                    .Include(p => p.Doctors)
-                    .Include(p => p.User)
-                    .Include(p => p.LikedDoctors)
+            var patients = await _patientRepository.GetAllAsync(page, size
             );
             return _mapper.Map<IEnumerable<PatientDTO>>(patients);
         }

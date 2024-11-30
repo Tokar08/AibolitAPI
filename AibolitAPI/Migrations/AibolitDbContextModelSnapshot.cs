@@ -150,7 +150,7 @@ namespace AibolitAPI.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("DoctorId")
+                    b.Property<Guid?>("DoctorId")
                         .HasColumnType("uuid");
 
                     b.Property<bool>("IsActive")
@@ -485,9 +485,7 @@ namespace AibolitAPI.Migrations
                 {
                     b.HasOne("AibolitAPI.Models.Doctor", "CreatedBy")
                         .WithMany()
-                        .HasForeignKey("DoctorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("DoctorId");
 
                     b.Navigation("CreatedBy");
                 });

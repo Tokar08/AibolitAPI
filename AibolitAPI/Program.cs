@@ -1,25 +1,34 @@
 using AibolitAPI.Auth;
 using AibolitAPI.Data;
 using AibolitAPI.Interfaces;
+using AibolitAPI.Mappers;
 using AibolitAPI.Middleware;
 using AibolitAPI.Repositories;
+using AibolitAPI.SearchProviders;
 using AibolitAPI.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Настройка logger-а запроса к базе данных
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.File("test-sql-log.txt", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
+
 // Настройка контекста данных для подключения к базе данных
 builder.Services.AddDbContext<AibolitDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")).UseLazyLoadingProxies(false)
+        .LogTo(message => Log.Logger.Information(message), LogLevel.Information)
+        .EnableSensitiveDataLogging());
+
 
 // Настройка AutoMapper
-builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddAutoMapper(config => { config.AddProfile<MapperProfile>(); });
 
-
-// Настройка AutoMapper
-builder.Services.AddAutoMapper(typeof(Program));
 
 // Регистрация сервисов и репозиториев
 builder.Services.AddScoped<IAdministratorRepository, AdministratorRepository>();
@@ -56,7 +65,21 @@ builder.Services.AddScoped<IWorkScheduleRepository, WorkScheduleRepository>();
 builder.Services.AddScoped<WorkScheduleService>();
 
 builder.Services.AddScoped<IRoleValidator, RoleValidator>();
+
 builder.Services.AddScoped<KeycloakService>();
+
+builder.Services.AddHttpClient<ExternalApiSearchProvider>();
+builder.Services.AddScoped<IDiseaseSearchProvider, ExternalApiSearchProvider>();
+builder.Services.AddHttpClient<OpenAIDiseaseSearchProvider>(client =>
+{
+    client.BaseAddress = new Uri("https://api.openai.com/v1/");
+    client.DefaultRequestHeaders.Add("Authorization", $"Bearer {builder.Configuration["OpenAI:ApiKey"]}");
+    client.DefaultRequestHeaders.Add("Content-Type", "application/json");
+});
+
+
+builder.Services.AddScoped<DiseaseSearchService>();
+
 // Настройка аутентификации Keycloak
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

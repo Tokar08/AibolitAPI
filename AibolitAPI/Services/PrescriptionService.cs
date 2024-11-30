@@ -24,11 +24,7 @@ public class PrescriptionService
     {
         try
         {
-            var prescriptions = await _prescriptionRepository.GetAllAsync(page, size,
-                prescription => prescription
-                    .Include(p => p.MedicalRecord)
-                    .Include(p => p.PrescribedBy)
-                    .Include(p => p.Patient)
+            var prescriptions = await _prescriptionRepository.GetAllAsync(page, size
             );
             return _mapper.Map<IEnumerable<PrescriptionDTO>>(prescriptions);
         }

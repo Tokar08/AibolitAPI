@@ -24,11 +24,7 @@ public class RecommendationService
     {
         try
         {
-            var recommendations = await _recommendationRepository.GetAllAsync(page, size,
-                recommendation => recommendation
-                    .Include(rec => rec.Patient)
-                    .Include(rec => rec.MedicalRecord)
-                    .Include(rec => rec.GivenBy)
+            var recommendations = await _recommendationRepository.GetAllAsync(page, size
             );
             return _mapper.Map<IEnumerable<RecommendationDTO>>(recommendations);
         }
