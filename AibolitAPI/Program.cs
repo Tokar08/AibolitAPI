@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
+using Serilog.Events;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,11 +18,21 @@ var builder = WebApplication.CreateBuilder(args);
 Log.Logger = new LoggerConfiguration()
     .WriteTo.File("test-sql-log.txt", rollingInterval: RollingInterval.Day)
     .CreateLogger();
+builder.Services.AddLogging(logging =>
+{
+    logging.ClearProviders();
+    logging.AddSerilog(new LoggerConfiguration()
+        .WriteTo.File("test-sql-log.txt", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 7)
+        .MinimumLevel.Information()
+        .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+        .Enrich.WithProperty("Application", "AibolitAPI")
+        .CreateLogger());
+});
 
 
 // Настройка контекста данных для подключения к базе данных
 builder.Services.AddDbContext<AibolitDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")).UseLazyLoadingProxies(false)
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")).UseLazyLoadingProxies()
         .LogTo(message => Log.Logger.Information(message), LogLevel.Information)
         .EnableSensitiveDataLogging());
 
@@ -70,6 +81,9 @@ builder.Services.AddScoped<KeycloakService>();
 
 builder.Services.AddHttpClient<ExternalApiSearchProvider>();
 builder.Services.AddScoped<IDiseaseSearchProvider, ExternalApiSearchProvider>();
+builder.Services.AddScoped<ITranslationService, GoogleTranslationService>();
+builder.Services.AddScoped<DiseaseSearchService>();
+
 builder.Services.AddHttpClient<OpenAIDiseaseSearchProvider>(client =>
 {
     client.BaseAddress = new Uri("https://api.openai.com/v1/");

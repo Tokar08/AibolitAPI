@@ -52,6 +52,10 @@
               "target": "Package",
               "version": "[4.0.3, )"
             },
+            "Google.Cloud.Translation.V2": {
+              "target": "Package",
+              "version": "[3.4.0, )"
+            },
             "Keycloak.AuthServices.Authentication": {
               "target": "Package",
               "version": "[2.5.3, )"

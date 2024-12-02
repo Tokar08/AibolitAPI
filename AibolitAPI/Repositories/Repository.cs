@@ -19,10 +19,11 @@ public class Repository<T> : IRepository<T> where T : class
 
     public async Task<IEnumerable<T>> GetAllAsync(int page, int size)
     {
-        return await _dbSet
+        var collection = _dbSet
             .Skip((page - 1) * size)
             .Take(size)
             .ToListAsync();
+        return await collection;
     }
 
     public async Task<IEnumerable<T>> GetAllAsync(int page, int size, Func<IQueryable<T>, IQueryable<T>> include)

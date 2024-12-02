@@ -2,7 +2,6 @@
 using AibolitAPI.Interfaces;
 using AibolitAPI.Models;
 using AutoMapper;
-using Microsoft.EntityFrameworkCore;
 
 namespace AibolitAPI.Services;
 
@@ -31,6 +30,9 @@ public class MedicalRecordService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while getting all medical records.");
+            _logger.LogError(ex,
+                $"Error occurred in {nameof(GetAllAsync)} method: {ex.Message}. StackTrace: {ex.StackTrace}");
+
             throw;
         }
     }

@@ -25,7 +25,7 @@ public class MedicalRecordController : ControllerBase
         }
         catch (Exception ex)
         {
-            return BadRequest(new { message = ex.Message });
+            return StatusCode(500, new { Error = ex.Message, ex.StackTrace });
         }
     }
 
