@@ -1,5 +1,6 @@
 using AibolitAPI.Auth;
 using AibolitAPI.Data;
+using AibolitAPI.EmailManager;
 using AibolitAPI.Interfaces;
 using AibolitAPI.Mappers;
 using AibolitAPI.Middleware;
@@ -32,7 +33,7 @@ builder.Services.AddLogging(logging =>
 
 // Настройка контекста данных для подключения к базе данных
 builder.Services.AddDbContext<AibolitDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")).UseLazyLoadingProxies()
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")).UseLazyLoadingProxies(false)
         .LogTo(message => Log.Logger.Information(message), LogLevel.Information)
         .EnableSensitiveDataLogging());
 
@@ -56,9 +57,6 @@ builder.Services.AddScoped<HospitalService>();
 
 builder.Services.AddScoped<IMedicalRecordRepository, MedicalRecordRepository>();
 builder.Services.AddScoped<MedicalRecordService>();
-
-builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
-builder.Services.AddScoped<NotificationService>();
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<UserService>();
@@ -84,15 +82,17 @@ builder.Services.AddScoped<IDiseaseSearchProvider, ExternalApiSearchProvider>();
 builder.Services.AddScoped<ITranslationService, GoogleTranslationService>();
 builder.Services.AddScoped<DiseaseSearchService>();
 
-builder.Services.AddHttpClient<OpenAIDiseaseSearchProvider>(client =>
-{
-    client.BaseAddress = new Uri("https://api.openai.com/v1/");
-    client.DefaultRequestHeaders.Add("Authorization", $"Bearer {builder.Configuration["OpenAI:ApiKey"]}");
-    client.DefaultRequestHeaders.Add("Content-Type", "application/json");
-});
-
-
 builder.Services.AddScoped<DiseaseSearchService>();
+
+builder.Services.AddScoped<IEmailTemplateFactory, EmailTemplateFactory>();
+builder.Services.AddScoped<INotificationSender>(_ =>
+{
+    var senderEmail = builder.Configuration["EmailSettings:SenderEmail"];
+    var senderPassword = builder.Configuration["EmailSettings:SenderPassword"];
+    return new EmailSender(senderEmail, senderPassword);
+});
+builder.Services.AddScoped<NotificationService>();
+
 
 // Настройка аутентификации Keycloak
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

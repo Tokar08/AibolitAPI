@@ -20,6 +20,8 @@ public class KeycloakService
             var jwtToken = new JwtSecurityTokenHandler().ReadJwtToken(token);
 
             var keycloakId = jwtToken.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
+            var email = jwtToken.Claims.FirstOrDefault(c => c.Type == "email")?.Value;
+            var userName = jwtToken.Claims.FirstOrDefault(c => c.Type == "name")?.Value;
 
             if (string.IsNullOrEmpty(keycloakId))
             {
@@ -27,7 +29,19 @@ public class KeycloakService
                 return;
             }
 
-            var user = await _userService.AuthenticateOrRegisterAsync(keycloakId);
+            if (string.IsNullOrEmpty(email))
+            {
+                _logger.LogWarning("Token does not contain a 'email' claim (Email).");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(userName))
+            {
+                _logger.LogWarning("Token does not contain a 'name' claim (User Name).");
+                return;
+            }
+
+            var user = await _userService.AuthenticateOrRegisterAsync(keycloakId, email);
 
             _logger.LogInformation("User authenticated or registered: {UserId}", user.Id);
         }

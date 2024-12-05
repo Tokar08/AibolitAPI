@@ -17,7 +17,6 @@ public class PatientRepository : IPatientRepository
     public async Task<IEnumerable<Patient>> GetAllAsync(int page, int size)
     {
         return await _context.Patients
-            .IgnoreQueryFilters()
             .Skip((page - 1) * size)
             .Take(size)
             .ToListAsync();

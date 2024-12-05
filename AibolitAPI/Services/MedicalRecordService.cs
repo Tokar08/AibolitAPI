@@ -2,6 +2,7 @@
 using AibolitAPI.Interfaces;
 using AibolitAPI.Models;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 
 namespace AibolitAPI.Services;
 
@@ -23,7 +24,11 @@ public class MedicalRecordService
     {
         try
         {
-            var medicalRecords = await _medicalRecordRepository.GetAllAsync(page, size
+            var medicalRecords = await _medicalRecordRepository.GetAllAsync(page, size,
+                medicalRecord => medicalRecord
+                    .Include(mr => mr.Appointments)
+                    .Include(mr => mr.Prescriptions)
+                    .Include(mr => mr.Recommendations)
             );
             return _mapper.Map<IEnumerable<MedicalRecordDTO>>(medicalRecords);
         }

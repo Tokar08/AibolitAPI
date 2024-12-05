@@ -39,9 +39,6 @@ public class MapperProfile : Profile
 
         // Mapping for MedicalRecord <-> MedicalRecordDTO
         CreateMap<MedicalRecord, MedicalRecordDTO>()
-            .ForMember(dest => dest.Appointments, opt => opt.Ignore())
-            .ForMember(dest => dest.Prescriptions, opt => opt.Ignore())
-            .ForMember(dest => dest.Recommendations, opt => opt.Ignore())
             .PreserveReferences()
             .ReverseMap();
 

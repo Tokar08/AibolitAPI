@@ -11,18 +11,22 @@ public class UserService
     private readonly AibolitDbContext _dbContext;
     private readonly ILogger<UserService> _logger;
     private readonly IMapper _mapper;
+    private readonly INotificationSender _notificationSender;
+    private readonly IEmailTemplateFactory _templateFactory;
     private readonly IUserRepository _userRepository;
 
     public UserService(IUserRepository userRepository, IMapper mapper, ILogger<UserService> logger,
-        AibolitDbContext dbContext)
+        AibolitDbContext dbContext, INotificationSender notificationSender, IEmailTemplateFactory templateFactory)
     {
         _userRepository = userRepository;
         _mapper = mapper;
         _logger = logger;
         _dbContext = dbContext;
+        _notificationSender = notificationSender;
+        _templateFactory = templateFactory;
     }
 
-    public async Task<UserDTO> AuthenticateOrRegisterAsync(string keycloakId)
+    public async Task<UserDTO> AuthenticateOrRegisterAsync(string keycloakId, string email)
     {
         try
         {
@@ -78,6 +82,9 @@ public class UserService
 
             _dbContext.Patients.Add(newPatient);
             await _dbContext.SaveChangesAsync();
+
+            var template = _templateFactory.GetTemplate("registration");
+            await _notificationSender.SendAsync(email, template);
 
             return _mapper.Map<UserDTO>(newUser);
         }
