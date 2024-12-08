@@ -74,17 +74,26 @@ builder.Services.AddScoped<IWorkScheduleRepository, WorkScheduleRepository>();
 builder.Services.AddScoped<WorkScheduleService>();
 
 builder.Services.AddScoped<IRoleValidator, RoleValidator>();
-
 builder.Services.AddScoped<KeycloakService>();
-
-builder.Services.AddHttpClient<ExternalApiSearchProvider>();
-builder.Services.AddScoped<IDiseaseSearchProvider, ExternalApiSearchProvider>();
 builder.Services.AddScoped<ITranslationService, GoogleTranslationService>();
-builder.Services.AddScoped<DiseaseSearchService>();
+
+builder.Services.AddHttpClient<GeminiDiseaseSearchProvider>();
+builder.Services.AddHttpClient<ExternalApiSearchProvider>();
+
+builder.Services.AddScoped<Func<string, IDiseaseSearchProvider>>(serviceProvider => provider =>
+{
+    return provider.ToLower() switch
+    {
+        "external" => serviceProvider.GetRequiredService<ExternalApiSearchProvider>(),
+        "openai" => serviceProvider.GetRequiredService<GeminiDiseaseSearchProvider>(),
+        _ => throw new ArgumentException("Invalid provider specified.")
+    };
+});
 
 builder.Services.AddScoped<DiseaseSearchService>();
 
-builder.Services.AddScoped<IEmailTemplateFactory, EmailTemplateFactory>();
+var templateBasePath = Path.Combine(builder.Environment.ContentRootPath, "EmailManager/Templates/EmailTemplates");
+builder.Services.AddScoped<IEmailTemplateFactory>(_ => new EmailTemplateFactory(templateBasePath));
 builder.Services.AddScoped<INotificationSender>(_ =>
 {
     var senderEmail = builder.Configuration["EmailSettings:SenderEmail"];

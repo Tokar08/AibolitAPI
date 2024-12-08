@@ -16,16 +16,25 @@ public class PatientRepository : IPatientRepository
 
     public async Task<IEnumerable<Patient>> GetAllAsync(int page, int size)
     {
-        return await _context.Patients
+        return await _context.Patients.IgnoreQueryFilters()
             .Skip((page - 1) * size)
             .Take(size)
             .ToListAsync();
     }
 
-    public Task<IEnumerable<Patient>> GetAllAsync(int page, int size,
+    public async Task<IEnumerable<Patient>> GetAllAsync(int page, int size,
         Func<IQueryable<Patient>, IQueryable<Patient>>? include)
     {
-        throw new NotImplementedException();
+        var query = _context.Patients.IgnoreQueryFilters();
+
+        if (include != null) query = include(query);
+
+        var patients = await query
+            .Skip((page - 1) * size)
+            .Take(size)
+            .ToListAsync();
+
+        return patients;
     }
 
     public async Task<Patient?> GetByIdAsync(Guid id)

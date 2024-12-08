@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "A/T4iOhOoIK9r1zrnA+esW8sv6d4NjZDmNwr6Iaji9h2e4mgEA/DQVwMoMV/uXQ8xcNf5E5TlEOxaveKJOWs2Q==",
+  "dgSpecHash": "UVLSuhMrY/dTnEzftEM6sWDuIqYCxEvcP8YL4ttP4ovzQub5wlMtgr0rZi5Hfx3+Up2B5wrqB2yFibDXgTFsiw==",
   "success": true,
   "projectFilePath": "C:\\Users\\kagu_rhick\\source\\ASP.NET_HW\\AibolitAPI\\AibolitAPI\\AibolitAPI.csproj",
   "expectedPackageFiles": [
@@ -67,6 +67,7 @@
     "C:\\Users\\kagu_rhick\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512",
     "C:\\Users\\kagu_rhick\\.nuget\\packages\\npgsql\\8.0.3\\npgsql.8.0.3.nupkg.sha512",
     "C:\\Users\\kagu_rhick\\.nuget\\packages\\npgsql.entityframeworkcore.postgresql\\8.0.4\\npgsql.entityframeworkcore.postgresql.8.0.4.nupkg.sha512",
+    "C:\\Users\\kagu_rhick\\.nuget\\packages\\restsharp\\112.1.0\\restsharp.112.1.0.nupkg.sha512",
     "C:\\Users\\kagu_rhick\\.nuget\\packages\\serilog\\4.1.0\\serilog.4.1.0.nupkg.sha512",
     "C:\\Users\\kagu_rhick\\.nuget\\packages\\serilog.extensions.logging\\8.0.0\\serilog.extensions.logging.8.0.0.nupkg.sha512",
     "C:\\Users\\kagu_rhick\\.nuget\\packages\\serilog.sinks.file\\6.0.0\\serilog.sinks.file.6.0.0.nupkg.sha512",

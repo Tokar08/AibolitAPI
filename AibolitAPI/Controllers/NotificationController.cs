@@ -15,16 +15,21 @@ public class NotificationController : ControllerBase
     }
 
     [HttpPost("send-email")]
-    public async Task<IActionResult> SendEmail([FromQuery] string recipient, [FromQuery] string type)
+    public async Task<IActionResult> SendEmail([FromQuery] string recipient, [FromQuery] string type,
+        [FromBody] string model)
     {
         try
         {
-            await _notificationService.SendEmailAsync(recipient, type);
+            await _notificationService.SendEmailAsync(recipient, type, model);
             return Ok("Email sent successfully.");
         }
         catch (ArgumentException ex)
         {
             return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"An error occurred: {ex.Message}");
         }
     }
 }

@@ -2,5 +2,5 @@
 
 public interface INotificationSender
 {
-    Task SendAsync(string recipient, object model);
+    Task SendAsync(string recipient, IEmailTemplate template, object model);
 }

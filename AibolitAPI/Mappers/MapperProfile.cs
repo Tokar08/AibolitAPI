@@ -34,12 +34,17 @@ public class MapperProfile : Profile
 
         // Mapping for Patient <-> PatientDTO
         CreateMap<Patient, PatientDTO>()
+            .ForMember(dest => dest.LikedDoctors, opt => opt.MapFrom(src => src.LikedDoctors))
+            .ForMember(dest => dest.Doctors, opt => opt.MapFrom(src => src.Doctors))
             .ReverseMap()
             .MaxDepth(3);
 
         // Mapping for MedicalRecord <-> MedicalRecordDTO
         CreateMap<MedicalRecord, MedicalRecordDTO>()
             .PreserveReferences()
+            .ForMember(dest => dest.Appointments, opt => opt.MapFrom(src => src.Appointments))
+            .ForMember(dest => dest.Prescriptions, opt => opt.MapFrom(src => src.Prescriptions))
+            .ForMember(dest => dest.Recommendations, opt => opt.MapFrom(src => src.Recommendations))
             .ReverseMap();
 
         // Mapping for Appointment <-> AppointmentDTO

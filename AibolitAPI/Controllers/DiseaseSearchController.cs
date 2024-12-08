@@ -1,5 +1,4 @@
 ﻿using AibolitAPI.Services;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AibolitAPI.Controllers;
@@ -15,7 +14,6 @@ public class DiseaseSearchController : ControllerBase
         _diseaseSearchService = diseaseSearchService;
     }
 
-    [AllowAnonymous]
     [HttpGet("search")]
     public async Task<IActionResult> Search([FromQuery] string term, [FromQuery] string provider)
     {
@@ -24,7 +22,7 @@ public class DiseaseSearchController : ControllerBase
              !provider.Equals("openai", StringComparison.OrdinalIgnoreCase)))
             return BadRequest("Invalid provider specified.");
 
-        var result = await _diseaseSearchService.SearchAsync(term);
+        var result = await _diseaseSearchService.SearchAsync(term, provider);
 
         return Ok(result);
     }

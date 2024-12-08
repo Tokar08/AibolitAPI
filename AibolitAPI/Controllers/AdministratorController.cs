@@ -17,7 +17,6 @@ public class AdministratorController : ControllerBase
     }
 
     [HttpGet]
-    [AuthorizeRole("Admin")]
     public async Task<ActionResult<IEnumerable<AdministratorDTO>>> GetAllAsync(int page = 1, int size = 10)
     {
         try

@@ -5,16 +5,17 @@ namespace AibolitAPI.Services;
 
 public class DiseaseSearchService
 {
-    private readonly IDiseaseSearchProvider _searchProvider;
+    private readonly Func<string, IDiseaseSearchProvider> _providerFactory;
     private readonly ITranslationService _translationService;
 
-    public DiseaseSearchService(IDiseaseSearchProvider searchProvider, ITranslationService translationService)
+    public DiseaseSearchService(Func<string, IDiseaseSearchProvider> providerFactory,
+        ITranslationService translationService)
     {
-        _searchProvider = searchProvider;
+        _providerFactory = providerFactory;
         _translationService = translationService;
     }
 
-    public async Task<object> SearchAsync(string term)
+    public async Task<object> SearchAsync(string term, string provider)
     {
         if (string.IsNullOrWhiteSpace(term))
             return new
@@ -23,7 +24,11 @@ public class DiseaseSearchService
                 Message = "Пожалуйста, укажите название болезни"
             };
 
-        var translatedTerm = await _translationService.TranslateAsync(term, LanguageCodes.English);
-        return await _searchProvider.SearchAsync(translatedTerm);
+        var searchProvider = _providerFactory(provider);
+
+        if (provider.Equals("external", StringComparison.OrdinalIgnoreCase))
+            term = await _translationService.TranslateAsync(term, LanguageCodes.English);
+
+        return await searchProvider.SearchAsync(term);
     }
 }

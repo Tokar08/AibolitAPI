@@ -22,7 +22,7 @@ public class KeycloakService
             var keycloakId = jwtToken.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
             var email = jwtToken.Claims.FirstOrDefault(c => c.Type == "email")?.Value;
             var userName = jwtToken.Claims.FirstOrDefault(c => c.Type == "name")?.Value;
-
+            var birthDate = jwtToken.Claims.FirstOrDefault(c => c.Type == "birthDate")?.Value;
             if (string.IsNullOrEmpty(keycloakId))
             {
                 _logger.LogWarning("Token does not contain a 'sub' claim (Keycloak ID).");
@@ -41,7 +41,13 @@ public class KeycloakService
                 return;
             }
 
-            var user = await _userService.AuthenticateOrRegisterAsync(keycloakId, email);
+            if (string.IsNullOrEmpty(birthDate))
+            {
+                _logger.LogWarning("Token does not contain a 'birthDate' claim (Birth Date).");
+                return;
+            }
+
+            var user = await _userService.AuthenticateOrRegisterAsync(keycloakId, email, userName, birthDate);
 
             _logger.LogInformation("User authenticated or registered: {UserId}", user.Id);
         }

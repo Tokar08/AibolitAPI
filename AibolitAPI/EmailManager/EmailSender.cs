@@ -12,16 +12,25 @@ public class EmailSender : INotificationSender
 
     public EmailSender(string senderEmail, string senderPassword)
     {
-        _senderEmail = senderEmail;
-        _senderPassword = senderPassword;
+        _senderEmail = senderEmail ?? throw new ArgumentNullException(nameof(senderEmail));
+        _senderPassword = senderPassword ?? throw new ArgumentNullException(nameof(senderPassword));
     }
 
-    public async Task SendAsync(string recipient, object model)
+    public async Task SendAsync(string recipient, IEmailTemplate template, object model)
     {
-        if (model is not IEmailTemplate template)
-            throw new ArgumentException("Model must implement IEmailTemplate");
+        if (string.IsNullOrEmpty(recipient))
+            throw new ArgumentException("Recipient email cannot be null or empty.", nameof(recipient));
 
-        var message = CreateMessage(recipient, template.Subject, template.GetBody(model));
+        if (template == null)
+            throw new ArgumentNullException(nameof(template));
+
+        if (model == null)
+            throw new ArgumentNullException(nameof(model));
+
+        var subject = template.Subject;
+        var body = template.GetBody(model);
+
+        var message = CreateMessage(recipient, subject, body);
 
         using var client = new SmtpClient();
         try
@@ -40,11 +49,15 @@ public class EmailSender : INotificationSender
     private MimeMessage CreateMessage(string recipient, string subject, string body)
     {
         var message = new MimeMessage();
-        message.From.Add(new MailboxAddress("Aibolit", _senderEmail));
-        message.To.Add(new MailboxAddress("", recipient));
+        message.From.Add(new MailboxAddress("AibolIT", _senderEmail));
+        message.To.Add(MailboxAddress.Parse(recipient));
         message.Subject = subject;
 
-        message.Body = new TextPart("html") { Text = body };
+        message.Body = new TextPart("html")
+        {
+            Text = body
+        };
+
         return message;
     }
 }

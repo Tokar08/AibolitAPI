@@ -4,10 +4,18 @@ namespace AibolitAPI.EmailManager.Templates;
 
 public class AppointmentReminderTemplate : IEmailTemplate
 {
+    private readonly string _templatePath;
+
+    public AppointmentReminderTemplate(string templatePath)
+    {
+        _templatePath = templatePath;
+    }
+
     public string Subject => "Напоминание о приеме";
 
     public string GetBody(object model)
     {
-        return "<h1>Напоминание!</h1><p>Не забудьте о своем приеме!</p>";
+        var templateContent = File.ReadAllText(_templatePath);
+        return templateContent;
     }
 }

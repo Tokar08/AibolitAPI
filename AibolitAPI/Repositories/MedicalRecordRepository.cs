@@ -27,7 +27,7 @@ public class MedicalRecordRepository : IMedicalRecordRepository
     public async Task<IEnumerable<MedicalRecord>> GetAllAsync(int page, int size,
         Func<IQueryable<MedicalRecord>, IQueryable<MedicalRecord>>? include)
     {
-        IQueryable<MedicalRecord> query = _context.MedicalRecords;
+        var query = _context.MedicalRecords.IgnoreQueryFilters();
 
         if (include != null) query = include(query);
 
@@ -42,7 +42,7 @@ public class MedicalRecordRepository : IMedicalRecordRepository
 
     public async Task<MedicalRecord?> GetByIdAsync(Guid id)
     {
-        return await _context.MedicalRecords
+        return await _context.MedicalRecords.IgnoreQueryFilters()
             .FirstOrDefaultAsync(record => record.Id == id);
     }
 

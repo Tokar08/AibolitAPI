@@ -4,10 +4,18 @@ namespace AibolitAPI.EmailManager.Templates;
 
 public class AppointmentConfirmationTemplate : IEmailTemplate
 {
+    private readonly string _templatePath;
+
+    public AppointmentConfirmationTemplate(string templatePath)
+    {
+        _templatePath = templatePath;
+    }
+
     public string Subject => "Подтверждение записи на прием";
 
     public string GetBody(object model)
     {
-        return "<h1>Ваш прием подтвержден!</h1><p>Детали будут отправлены позже.</p>";
+        var templateContent = File.ReadAllText(_templatePath);
+        return templateContent;
     }
 }

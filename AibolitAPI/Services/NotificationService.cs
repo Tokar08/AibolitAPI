@@ -18,12 +18,12 @@ public class NotificationService
         _logger = logger;
     }
 
-    public async Task SendEmailAsync(string recipient, string type)
+    public async Task SendEmailAsync(string recipient, string type, object model)
     {
         try
         {
             var template = _templateFactory.GetTemplate(type);
-            await _emailSender.SendAsync(recipient, template);
+            await _emailSender.SendAsync(recipient, template, model);
         }
         catch (Exception ex)
         {

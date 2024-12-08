@@ -5,18 +5,18 @@ namespace AibolitAPI.SearchProviders;
 
 public class ExternalApiSearchProvider : IDiseaseSearchProvider
 {
+    private readonly string _apiUrl;
     private readonly HttpClient _httpClient;
 
-    public ExternalApiSearchProvider(HttpClient httpClient)
+    public ExternalApiSearchProvider(HttpClient httpClient, IConfiguration configuration)
     {
         _httpClient = httpClient;
+        _apiUrl = configuration["ApiSettings:ExternalApiUrl"];
     }
 
     public async Task<object> SearchAsync(string term)
     {
-        var apiUrl =
-            $"https://lforms-service-vip.nlm.nih.gov/api/conditions/v3/search?sf=info_link_data&df=info_link_data&terms={term}";
-        var response = await _httpClient.GetAsync(apiUrl);
+        var response = await _httpClient.GetAsync($"{_apiUrl}{term}");
 
         if (!response.IsSuccessStatusCode)
             return new
@@ -40,34 +40,17 @@ public class ExternalApiSearchProvider : IDiseaseSearchProvider
                 Message = "No results found. Please check your input"
             };
 
-        var links = ExtractUniqueLinks(linksElement);
+        var links = linksElement.EnumerateArray()
+            .Where(e => e.ValueKind == JsonValueKind.Array)
+            .Select(e => e.EnumerateArray().FirstOrDefault().GetString())
+            .Where(link => !string.IsNullOrEmpty(link))
+            .Distinct()
+            .ToList();
 
         return new
         {
             Links = links,
             Message = links.Count > 0 ? "Results found" : "No results found. Please check your input"
         };
-    }
-
-    private static List<string> ExtractUniqueLinks(JsonElement linksElement)
-    {
-        var links = new HashSet<string>();
-
-        foreach (var item in linksElement.EnumerateArray())
-        {
-            if (item.ValueKind != JsonValueKind.Array)
-                continue;
-
-            var firstElement = item.EnumerateArray().FirstOrDefault();
-
-            if (firstElement.ValueKind != JsonValueKind.String)
-                continue;
-
-            var link = firstElement.GetString()?.Split(',').FirstOrDefault();
-
-            if (!string.IsNullOrEmpty(link)) links.Add(link);
-        }
-
-        return links.ToList();
     }
 }

@@ -26,7 +26,8 @@ public class UserService
         _templateFactory = templateFactory;
     }
 
-    public async Task<UserDTO> AuthenticateOrRegisterAsync(string keycloakId, string email)
+    public async Task<UserDTO> AuthenticateOrRegisterAsync(string keycloakId, string email, string userName,
+        string birthDateClaim)
     {
         try
         {
@@ -37,7 +38,12 @@ public class UserService
                 return _mapper.Map<UserDTO>(existingUser);
 
             var defaultRole = await _userRepository.GetRoleByNameAsync("Patient")
-                              ?? throw new Exception("Default role 'Patient' not found in database");
+                              ?? throw new Exception("Default role 'Patient' not found");
+
+            if (!DateTime.TryParse(birthDateClaim, out var birthDate) || birthDate.Date > DateTime.UtcNow.Date)
+                throw new ArgumentException(
+                    "Некоректна дата народження або дата народження не може бути у майбутньому.");
+
 
             var newUser = new User
             {
@@ -51,12 +57,10 @@ public class UserService
 
             await _userRepository.CreateAsync(newUser);
 
-
             var medicalRecord = new MedicalRecord
             {
                 Id = Guid.NewGuid(),
                 PatientId = newUser.Id,
-                DoctorId = null,
                 RecordDate = DateTime.UtcNow,
                 IsActive = true,
                 Appointments = new List<Appointment>(),
@@ -64,27 +68,23 @@ public class UserService
                 Recommendations = new List<Recommendation>()
             };
 
-
             _dbContext.MedicalRecords.Add(medicalRecord);
             await _dbContext.SaveChangesAsync();
-
 
             var newPatient = new Patient
             {
                 Id = Guid.NewGuid(),
                 UserId = newUser.Id,
                 MedicalRecordId = medicalRecord.Id,
-                IsActive = true,
-                Doctors = new List<Doctor>(),
-                LikedDoctors = new List<Doctor>()
+                IsActive = true
             };
-
 
             _dbContext.Patients.Add(newPatient);
             await _dbContext.SaveChangesAsync();
 
             var template = _templateFactory.GetTemplate("registration");
-            await _notificationSender.SendAsync(email, template);
+            await _notificationSender.SendAsync(email, template, userName);
+
 
             return _mapper.Map<UserDTO>(newUser);
         }
@@ -94,6 +94,7 @@ public class UserService
             throw;
         }
     }
+
 
     public async Task<User> GetUserByKeycloakIdAsync(string keycloakId)
     {

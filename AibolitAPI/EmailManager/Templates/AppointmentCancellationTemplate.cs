@@ -4,10 +4,18 @@ namespace AibolitAPI.EmailManager.Templates;
 
 public class AppointmentCancellationTemplate : IEmailTemplate
 {
+    private readonly string _templatePath;
+
+    public AppointmentCancellationTemplate(string templatePath)
+    {
+        _templatePath = templatePath;
+    }
+
     public string Subject => "Отмена записи на прием";
 
     public string GetBody(object model)
     {
-        return "<h1>Ваш прием отменен!</h1><p>Мы сожалеем, но ваша запись на прием была отменена.</p>";
+        var templateContent = File.ReadAllText(_templatePath);
+        return templateContent;
     }
 }

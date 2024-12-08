@@ -4,10 +4,18 @@ namespace AibolitAPI.EmailManager.Templates;
 
 public class NewPrescriptionTemplate : IEmailTemplate
 {
+    private readonly string _templatePath;
+
+    public NewPrescriptionTemplate(string templatePath)
+    {
+        _templatePath = templatePath;
+    }
+
     public string Subject => "Новый рецепт";
 
     public string GetBody(object model)
     {
-        return "<h1>Новый рецепт!</h1><p>Ваш врач выписал новый рецепт. Пожалуйста, ознакомьтесь с деталями.</p>";
+        var templateContent = File.ReadAllText(_templatePath);
+        return templateContent;
     }
 }
