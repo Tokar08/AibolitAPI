@@ -17,7 +17,6 @@ public class AppointmentRepository : IAppointmentRepository
     public async Task<IEnumerable<Appointment>> GetAllAsync(int page, int size)
     {
         return await _context.Appointments
-            .IgnoreQueryFilters()
             .Skip((page - 1) * size)
             .Take(size)
             .ToListAsync();
@@ -32,7 +31,6 @@ public class AppointmentRepository : IAppointmentRepository
     public async Task<Appointment?> GetByIdAsync(Guid id)
     {
         return await _context.Appointments
-            .IgnoreQueryFilters()
             .FirstOrDefaultAsync(a => a.Id == id);
     }
 

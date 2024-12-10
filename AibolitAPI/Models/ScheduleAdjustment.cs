@@ -1,13 +1,12 @@
 ﻿namespace AibolitAPI.Models;
 
-public class WorkSchedule
+public class ScheduleAdjustment
 {
     public Guid Id { get; set; }
-    public DayOfWeek DayOfWeek { get; set; }
+    public Guid WorkScheduleId { get; set; }
+    public virtual WorkSchedule WorkSchedule { get; set; }
+    public DateTime SpecificDate { get; set; }
     public TimeSpan StartTime { get; set; }
     public TimeSpan EndTime { get; set; }
-
     public bool IsActive { get; set; }
-
-    public virtual ICollection<ScheduleAdjustment> ScheduleAdjustments { get; set; } = new List<ScheduleAdjustment>();
 }

@@ -17,7 +17,6 @@ public class PrescriptionRepository : IPrescriptionRepository
     public async Task<IEnumerable<Prescription>> GetAllAsync(int page, int size)
     {
         return await _context.Prescriptions
-            .IgnoreQueryFilters()
             .Skip((page - 1) * size)
             .Take(size)
             .ToListAsync();
@@ -32,7 +31,6 @@ public class PrescriptionRepository : IPrescriptionRepository
     public async Task<Prescription?> GetByIdAsync(Guid id)
     {
         return await _context.Prescriptions
-            .IgnoreQueryFilters()
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 

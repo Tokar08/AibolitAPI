@@ -11,6 +11,7 @@
           "AutoMapper": "12.0.0",
           "AutoMapper.Extensions.Microsoft.DependencyInjection": "12.0.0",
           "BCrypt.Net-Next": "4.0.3",
+          "Google.Cloud.Storage.V1": "4.10.0",
           "Google.Cloud.Translation.V2": "3.4.0",
           "Keycloak.AuthServices.Authentication": "2.5.3",
           "Keycloak.AuthServices.Common": "2.5.3",
@@ -25,6 +26,7 @@
           "Serilog": "4.1.0",
           "Serilog.Extensions.Logging": "8.0.0",
           "Serilog.Sinks.File": "6.0.0",
+          "SixLabors.ImageSharp": "3.1.6",
           "Swashbuckle.AspNetCore": "6.4.0",
           "System.IdentityModel.Tokens.Jwt": "8.2.0"
         },
@@ -142,6 +144,18 @@
           }
         }
       },
+      "Google.Apis.Storage.v1/1.67.0.3365": {
+        "dependencies": {
+          "Google.Apis": "1.67.0",
+          "Google.Apis.Auth": "1.67.0"
+        },
+        "runtime": {
+          "lib/net6.0/Google.Apis.Storage.v1.dll": {
+            "assemblyVersion": "1.67.0.3365",
+            "fileVersion": "1.67.0.3365"
+          }
+        }
+      },
       "Google.Apis.Translate.v2/1.67.0.875": {
         "dependencies": {
           "Google.Apis": "1.67.0",
@@ -151,6 +165,18 @@
           "lib/net6.0/Google.Apis.Translate.v2.dll": {
             "assemblyVersion": "1.67.0.875",
             "fileVersion": "1.67.0.875"
+          }
+        }
+      },
+      "Google.Cloud.Storage.V1/4.10.0": {
+        "dependencies": {
+          "Google.Api.Gax.Rest": "4.8.0",
+          "Google.Apis.Storage.v1": "1.67.0.3365"
+        },
+        "runtime": {
+          "lib/netstandard2.0/Google.Cloud.Storage.V1.dll": {
+            "assemblyVersion": "4.10.0.0",
+            "fileVersion": "4.10.0.0"
           }
         }
       },
@@ -815,6 +841,14 @@
           }
         }
       },
+      "SixLabors.ImageSharp/3.1.6": {
+        "runtime": {
+          "lib/net6.0/SixLabors.ImageSharp.dll": {
+            "assemblyVersion": "3.0.0.0",
+            "fileVersion": "3.1.6.0"
+          }
+        }
+      },
       "Swashbuckle.AspNetCore/6.4.0": {
         "dependencies": {
           "Microsoft.Extensions.ApiDescription.Server": "6.0.5",
@@ -1074,12 +1108,26 @@
       "path": "google.apis.core/1.67.0",
       "hashPath": "google.apis.core.1.67.0.nupkg.sha512"
     },
+    "Google.Apis.Storage.v1/1.67.0.3365": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-N9Rp8aRUV8Fsjl6uojZeJnzZ/zwtImB+crkPz/HsUtIKcC8rx/ZhNdizNJ5YcNFKiVlvGC60p0K7M+Ywk2xTPQ==",
+      "path": "google.apis.storage.v1/1.67.0.3365",
+      "hashPath": "google.apis.storage.v1.1.67.0.3365.nupkg.sha512"
+    },
     "Google.Apis.Translate.v2/1.67.0.875": {
       "type": "package",
       "serviceable": true,
       "sha512": "sha512-Od8FKupnCHNwdJtrtvKqcNc5GO7kRy+IIAr6qTKt71DnF+1pEt0eTu52mxiDw9tStGHLwwFinZ+MTZf5ytmCpA==",
       "path": "google.apis.translate.v2/1.67.0.875",
       "hashPath": "google.apis.translate.v2.1.67.0.875.nupkg.sha512"
+    },
+    "Google.Cloud.Storage.V1/4.10.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-a4hHQzDkzR/5Fm2gvfKnvuajYwgTJAZ944+8S3gO7S3qxXkXI+rasx8Jz8ldflyq1zHO5MWTyFiHc7+dfmwYhg==",
+      "path": "google.cloud.storage.v1/4.10.0",
+      "hashPath": "google.cloud.storage.v1.4.10.0.nupkg.sha512"
     },
     "Google.Cloud.Translation.V2/3.4.0": {
       "type": "package",
@@ -1472,6 +1520,13 @@
       "sha512": "sha512-lxjg89Y8gJMmFxVkbZ+qDgjl+T4yC5F7WSLTvA+5q0R04tfKVLRL/EHpYoJ/MEQd2EeCKDuylBIVnAYMotmh2A==",
       "path": "serilog.sinks.file/6.0.0",
       "hashPath": "serilog.sinks.file.6.0.0.nupkg.sha512"
+    },
+    "SixLabors.ImageSharp/3.1.6": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-dHQ5jugF9v+5/LCVHCWVzaaIL6WOehqJy6eju/0VFYFPEj2WtqkGPoEV9EVQP83dHsdoqYaTuWpZdwAd37UwfA==",
+      "path": "sixlabors.imagesharp/3.1.6",
+      "hashPath": "sixlabors.imagesharp.3.1.6.nupkg.sha512"
     },
     "Swashbuckle.AspNetCore/6.4.0": {
       "type": "package",

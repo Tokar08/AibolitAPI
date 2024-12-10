@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AibolitAPI.Controllers;
 
-
 [Route("api/[controller]")]
 [ApiController]
 public class UserController : ControllerBase
@@ -21,7 +20,7 @@ public class UserController : ControllerBase
     {
         try
         {
-            var users = await _userService.GetAllAsync(page, size);
+            var users = await _userService.GetAllUsersFromKeycloakAsync();
             return Ok(users);
         }
         catch (Exception ex)
@@ -29,6 +28,28 @@ public class UserController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+
+    [HttpGet("synchronize")]
+    public async Task<IActionResult> SynchronizeUsersWithKeycloak(
+        [FromHeader(Name = "Authorization")] string authorization)
+    {
+        if (string.IsNullOrWhiteSpace(authorization))
+            return BadRequest(new { message = "Заголовок Authorization отсутствует." });
+
+        var token = authorization.Replace("Bearer ", "", StringComparison.OrdinalIgnoreCase);
+
+        // Пример вызова логики синхронизации
+        try
+        {
+            await _userService.SynchronizeUsersWithKeycloak(token);
+            return Ok(new { message = "Синхронизация завершена." });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Произошла ошибка.", details = ex.Message });
+        }
+    }
+
 
     [HttpGet("{id}")]
     public async Task<ActionResult<UserDTO>> GetByIdAsync(Guid id)

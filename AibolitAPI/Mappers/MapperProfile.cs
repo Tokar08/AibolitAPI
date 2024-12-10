@@ -66,10 +66,8 @@ public class MapperProfile : Profile
         CreateMap<WorkSchedule, WorkScheduleDTO>().ReverseMap()
             .MaxDepth(3);
 
-        // Mapping for Notification <-> NotificationDTO
-        CreateMap<Notification, NotificationDTO>()
-            .ForMember(dest => dest.NotificationDate, opt => opt.MapFrom(src => src.NotificationDate))
-            .ReverseMap()
+        // Mapping for ScheduleAdjustment <-> ScheduleAdjustmentDTO
+        CreateMap<ScheduleAdjustment, ScheduleAdjustmentDTO>().ReverseMap()
             .MaxDepth(3);
     }
 }

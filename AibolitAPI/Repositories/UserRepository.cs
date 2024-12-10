@@ -26,4 +26,14 @@ public class UserRepository : Repository<User>, IUserRepository
                    .FirstOrDefaultAsync(u => u.KeycloakId == keycloakId)
                ?? throw new Exception("User not found.");
     }
+
+    public async Task<IEnumerable<User>> GetAllWithRolesAsync(int page, int size)
+    {
+        return await _context.Users
+            .Include(u => u.Role) // Подгружаем роли
+            .OrderBy(u => u.Role.Title) // Сортируем сразу на уровне базы данных
+            .Skip((page - 1) * size)
+            .Take(size)
+            .ToListAsync();
+    }
 }

@@ -16,7 +16,7 @@ public class MedicalRecordRepository : IMedicalRecordRepository
 
     public async Task<IEnumerable<MedicalRecord>> GetAllAsync(int page, int size)
     {
-        var medicalRecords = await _context.MedicalRecords.IgnoreQueryFilters()
+        var medicalRecords = await _context.MedicalRecords
             .Skip((page - 1) * size)
             .Take(size)
             .ToListAsync();
@@ -27,7 +27,7 @@ public class MedicalRecordRepository : IMedicalRecordRepository
     public async Task<IEnumerable<MedicalRecord>> GetAllAsync(int page, int size,
         Func<IQueryable<MedicalRecord>, IQueryable<MedicalRecord>>? include)
     {
-        var query = _context.MedicalRecords.IgnoreQueryFilters();
+        var query = _context.MedicalRecords.AsQueryable();
 
         if (include != null) query = include(query);
 

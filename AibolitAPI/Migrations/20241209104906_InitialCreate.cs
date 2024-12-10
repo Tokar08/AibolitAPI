@@ -42,9 +42,10 @@ namespace AibolitAPI.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    DaysOfWeek = table.Column<string>(type: "text", nullable: false),
+                    DayOfWeek = table.Column<int>(type: "integer", nullable: false),
                     StartTime = table.Column<TimeSpan>(type: "interval", nullable: false),
-                    EndTime = table.Column<TimeSpan>(type: "interval", nullable: false)
+                    EndTime = table.Column<TimeSpan>(type: "interval", nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -74,6 +75,28 @@ namespace AibolitAPI.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ScheduleAdjustments",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    WorkScheduleId = table.Column<Guid>(type: "uuid", nullable: false),
+                    SpecificDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    StartTime = table.Column<TimeSpan>(type: "interval", nullable: false),
+                    EndTime = table.Column<TimeSpan>(type: "interval", nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ScheduleAdjustments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ScheduleAdjustments_WorkSchedules_WorkScheduleId",
+                        column: x => x.WorkScheduleId,
+                        principalTable: "WorkSchedules",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Administrators",
                 columns: table => new
                 {
@@ -97,28 +120,6 @@ namespace AibolitAPI.Migrations
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Notifications",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Message = table.Column<string>(type: "text", nullable: false),
-                    NotificationDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    IsRead = table.Column<bool>(type: "boolean", nullable: false),
-                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Notifications", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Notifications_Users_UserId",
-                        column: x => x.UserId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -430,11 +431,6 @@ namespace AibolitAPI.Migrations
                 column: "DoctorId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Notifications_UserId",
-                table: "Notifications",
-                column: "UserId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_PatientDoctorLikes_PatientId",
                 table: "PatientDoctorLikes",
                 column: "PatientId");
@@ -486,6 +482,11 @@ namespace AibolitAPI.Migrations
                 column: "PatientId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ScheduleAdjustments_WorkScheduleId",
+                table: "ScheduleAdjustments",
+                column: "WorkScheduleId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Users_RoleId",
                 table: "Users",
                 column: "RoleId");
@@ -501,9 +502,6 @@ namespace AibolitAPI.Migrations
                 name: "DoctorPatient");
 
             migrationBuilder.DropTable(
-                name: "Notifications");
-
-            migrationBuilder.DropTable(
                 name: "PatientDoctorLikes");
 
             migrationBuilder.DropTable(
@@ -511,6 +509,9 @@ namespace AibolitAPI.Migrations
 
             migrationBuilder.DropTable(
                 name: "Recommendations");
+
+            migrationBuilder.DropTable(
+                name: "ScheduleAdjustments");
 
             migrationBuilder.DropTable(
                 name: "Patients");

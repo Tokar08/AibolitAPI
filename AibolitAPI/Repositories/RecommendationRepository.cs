@@ -17,7 +17,6 @@ public class RecommendationRepository : IRecommendationRepository
     public async Task<IEnumerable<Recommendation>> GetAllAsync(int page, int size)
     {
         return await _context.Recommendations
-            .IgnoreQueryFilters()
             .Skip((page - 1) * size)
             .Take(size)
             .ToListAsync();
@@ -32,7 +31,6 @@ public class RecommendationRepository : IRecommendationRepository
     public async Task<Recommendation?> GetByIdAsync(Guid id)
     {
         return await _context.Recommendations
-            .IgnoreQueryFilters()
             .FirstOrDefaultAsync(r => r.Id == id);
     }
 

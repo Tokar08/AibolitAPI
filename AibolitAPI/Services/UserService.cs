@@ -1,8 +1,11 @@
-﻿using AibolitAPI.Data;
+﻿using System.Net.Http.Headers;
+using AibolitAPI.Data;
 using AibolitAPI.DTOs;
 using AibolitAPI.Interfaces;
 using AibolitAPI.Models;
 using AutoMapper;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace AibolitAPI.Services;
 
@@ -105,8 +108,12 @@ public class UserService
     {
         try
         {
-            var users = await _userRepository.GetAllAsync(page, size);
-            return _mapper.Map<IEnumerable<UserDTO>>(users);
+            var users = await _userRepository.GetAllWithRolesAsync(page, size);
+            var sortedUsers = users.OrderBy(u => u.Role.Title).ToList();
+
+            foreach (var user in sortedUsers) Console.WriteLine($"User: {user.KeycloakId}, Role: {user.Role.Title}");
+
+            return _mapper.Map<IEnumerable<UserDTO>>(sortedUsers);
         }
         catch (Exception ex)
         {
@@ -114,6 +121,125 @@ public class UserService
             throw;
         }
     }
+
+    private async Task<string> GetAdminTokenAsync()
+    {
+        try
+        {
+            using var httpClient = new HttpClient();
+            var request = new HttpRequestMessage(HttpMethod.Post,
+                "http://localhost:8081/realms/master/protocol/openid-connect/token");
+
+            request.Content = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                { "client_id", "admin-cli" },
+                { "username", "admin" },
+                { "password", "admin" },
+                { "grant_type", "password" }
+            });
+
+            var response = await httpClient.SendAsync(request);
+
+            if (!response.IsSuccessStatusCode)
+                throw new Exception($"Failed to retrieve admin token. Status code: {response.StatusCode}");
+
+            var content = await response.Content.ReadAsStringAsync();
+            var tokenResponse = JsonConvert.DeserializeObject<Dictionary<string, string>>(content);
+
+            if (tokenResponse == null || !tokenResponse.ContainsKey("access_token"))
+                throw new Exception("Invalid token response from Keycloak.");
+
+            return tokenResponse["access_token"];
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error while retrieving admin token from Keycloak.");
+            throw;
+        }
+    }
+
+    public async Task<IEnumerable<Dictionary<string, object>>> GetAllUsersFromKeycloakAsync()
+    {
+        try
+        {
+            var adminToken = await GetAdminTokenAsync();
+
+            using var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+            var response = await httpClient.GetAsync("http://localhost:8081/admin/realms/aibolit-api/users");
+
+            if (!response.IsSuccessStatusCode)
+                throw new Exception($"Failed to retrieve users from Keycloak. Status code: {response.StatusCode}");
+
+            var content = await response.Content.ReadAsStringAsync();
+            var keycloakUsers = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(content);
+
+            if (keycloakUsers == null || !keycloakUsers.Any())
+                throw new Exception("No users found in Keycloak.");
+
+            foreach (var user in keycloakUsers)
+                if (user.TryGetValue("attributes", out var attributes) && attributes is JObject attributesObj)
+                    user["attributes"] = attributesObj.ToObject<Dictionary<string, List<string>>>();
+
+            return keycloakUsers;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error while retrieving users from Keycloak.");
+            throw;
+        }
+    }
+
+
+    public async Task SynchronizeUsersWithKeycloak(string userToken)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(userToken))
+                throw new ArgumentException("Токен пользователя отсутствует или некорректен.");
+
+            using var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", userToken);
+
+            var response = await httpClient.GetAsync("http://localhost:8081/admin/realms/aibolit-api/users");
+            if (!response.IsSuccessStatusCode)
+                throw new Exception(
+                    $"Не удалось получить пользователей из Keycloak. Код ошибки: {response.StatusCode}");
+
+            var keycloakUsersJson = await response.Content.ReadAsStringAsync();
+            var keycloakUsers = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(keycloakUsersJson);
+
+            if (keycloakUsers == null || !keycloakUsers.Any())
+                throw new Exception("Список пользователей из Keycloak пуст.");
+
+            // Извлекаем KeycloakId из ответа
+            var keycloakIds = keycloakUsers
+                .Where(u => u.ContainsKey("id"))
+                .Select(u => u["id"]?.ToString())
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .ToHashSet();
+
+            // Получаем пользователей из БД
+            var dbUsers = await _userRepository.GetAllAsync(1, int.MaxValue);
+
+            // Удаляем пользователей, которых нет в Keycloak
+            var usersToDelete = dbUsers.Where(dbUser => !keycloakIds.Contains(dbUser.KeycloakId)).ToList();
+            foreach (var user in usersToDelete)
+            {
+                await _userRepository.SoftDeleteAsync(user.Id);
+                Console.WriteLine($"Удалён пользователь из БД: {user.KeycloakId}");
+            }
+
+            Console.WriteLine("Синхронизация завершена.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка во время синхронизации с Keycloak.");
+            throw;
+        }
+    }
+
 
     public async Task<UserDTO> GetByIdAsync(Guid id)
     {

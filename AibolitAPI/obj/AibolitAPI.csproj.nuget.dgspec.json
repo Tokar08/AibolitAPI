@@ -52,6 +52,10 @@
               "target": "Package",
               "version": "[4.0.3, )"
             },
+            "Google.Cloud.Storage.V1": {
+              "target": "Package",
+              "version": "[4.10.0, )"
+            },
             "Google.Cloud.Translation.V2": {
               "target": "Package",
               "version": "[3.4.0, )"
@@ -111,6 +115,10 @@
             "Serilog.Sinks.File": {
               "target": "Package",
               "version": "[6.0.0, )"
+            },
+            "SixLabors.ImageSharp": {
+              "target": "Package",
+              "version": "[3.1.6, )"
             },
             "Swashbuckle.AspNetCore": {
               "target": "Package",

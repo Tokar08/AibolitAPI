@@ -46,12 +46,25 @@ public class DoctorController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult> CreateAsync([FromBody] DoctorDTO doctorDto)
+    public async Task<IActionResult> CreateAsync([FromBody] DoctorDTO doctorDto)
     {
         try
         {
-            await _doctorService.CreateAsync(doctorDto);
-            return Created($"api/Doctor/{doctorDto.Id}", doctorDto);
+            Stream? photoStream = null;
+
+            var filePath = doctorDto.PhotoUrl;
+            if (!string.IsNullOrWhiteSpace(doctorDto.PhotoUrl))
+            {
+                if (!System.IO.File.Exists(filePath))
+                    return BadRequest(new { message = "File does not exist at the specified path." });
+
+                photoStream = System.IO.File.OpenRead(filePath);
+            }
+
+            await _doctorService.CreateWithPhotoAsync(doctorDto, photoStream,
+                photoStream != null ? Path.GetFileName(filePath) : null);
+
+            return Created($"api/Doctor/{doctorDto.Id}", new { message = "Doctor created successfully" });
         }
         catch (Exception ex)
         {
@@ -60,20 +73,29 @@ public class DoctorController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult> UpdateAsync(Guid id, [FromBody] DoctorDTO doctorDto)
+    public async Task<IActionResult> UpdateAsync(Guid id, [FromBody] DoctorDTO doctorDto)
     {
         try
         {
-            if (id != doctorDto.Id) return BadRequest(new { message = "ID mismatch" });
+            if (id != doctorDto.Id)
+                return BadRequest(new { message = "ID mismatch" });
 
-            await _doctorService.UpdateAsync(doctorDto);
-            return NoContent();
+            Stream? photoStream = null;
+            var filePath = doctorDto.PhotoUrl;
+            if (!string.IsNullOrWhiteSpace(doctorDto.PhotoUrl) && System.IO.File.Exists(doctorDto.PhotoUrl))
+                photoStream = System.IO.File.OpenRead(filePath);
+
+            await _doctorService.UpdateWithPhotoAsync(id, doctorDto, photoStream,
+                photoStream != null ? Path.GetFileName(filePath) : null);
+
+            return Ok(new { message = "Doctor updated successfully", photoUrl = doctorDto.PhotoUrl });
         }
         catch (Exception ex)
         {
             return BadRequest(new { message = ex.Message });
         }
     }
+
 
     [HttpDelete("{id}")]
     public async Task<ActionResult> SoftDeleteAsync(Guid id)

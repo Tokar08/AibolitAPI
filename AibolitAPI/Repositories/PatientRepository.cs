@@ -16,7 +16,7 @@ public class PatientRepository : IPatientRepository
 
     public async Task<IEnumerable<Patient>> GetAllAsync(int page, int size)
     {
-        return await _context.Patients.IgnoreQueryFilters()
+        return await _context.Patients
             .Skip((page - 1) * size)
             .Take(size)
             .ToListAsync();
@@ -25,7 +25,7 @@ public class PatientRepository : IPatientRepository
     public async Task<IEnumerable<Patient>> GetAllAsync(int page, int size,
         Func<IQueryable<Patient>, IQueryable<Patient>>? include)
     {
-        var query = _context.Patients.IgnoreQueryFilters();
+        var query = _context.Patients.AsQueryable();
 
         if (include != null) query = include(query);
 
@@ -40,7 +40,6 @@ public class PatientRepository : IPatientRepository
     public async Task<Patient?> GetByIdAsync(Guid id)
     {
         return await _context.Patients
-            .IgnoreQueryFilters()
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 

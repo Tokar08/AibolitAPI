@@ -8,8 +8,8 @@ namespace AibolitAPI.Repositories;
 //TODO: Заменить потом для каждой реализации репозитория, ибо будут дополняться методы для большинства сущностей!
 public class Repository<T> : IRepository<T> where T : class
 {
-    private readonly AibolitDbContext _context;
-    private readonly DbSet<T> _dbSet;
+    protected readonly AibolitDbContext _context;
+    protected readonly DbSet<T> _dbSet;
 
     protected Repository(AibolitDbContext context)
     {

@@ -33,7 +33,7 @@ builder.Services.AddLogging(logging =>
 
 // Настройка контекста данных для подключения к базе данных
 builder.Services.AddDbContext<AibolitDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")).UseLazyLoadingProxies(false)
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")).UseLazyLoadingProxies()
         .LogTo(message => Log.Logger.Information(message), LogLevel.Information)
         .EnableSensitiveDataLogging());
 
@@ -51,6 +51,8 @@ builder.Services.AddScoped<AppointmentService>();
 
 builder.Services.AddScoped<IDoctorRepository, DoctorRepository>();
 builder.Services.AddScoped<DoctorService>();
+
+builder.Services.AddScoped<ICloudStorageService, GoogleCloudStorageService>();
 
 builder.Services.AddScoped<IHospitalRepository, HospitalRepository>();
 builder.Services.AddScoped<HospitalService>();

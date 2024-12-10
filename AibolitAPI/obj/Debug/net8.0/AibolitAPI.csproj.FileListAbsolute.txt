@@ -142,3 +142,6 @@ C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\Mai
 C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\MimeKit.dll
 C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\System.Formats.Asn1.dll
 C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\RestSharp.dll
+C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\Google.Apis.Storage.v1.dll
+C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\Google.Cloud.Storage.V1.dll
+C:\Users\kagu_rhick\source\ASP.NET_HW\AibolitAPI\AibolitAPI\bin\Debug\net8.0\SixLabors.ImageSharp.dll

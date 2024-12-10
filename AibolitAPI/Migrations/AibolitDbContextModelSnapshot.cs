@@ -180,35 +180,6 @@ namespace AibolitAPI.Migrations
                     b.ToTable("MedicalRecords");
                 });
 
-            modelBuilder.Entity("AibolitAPI.Models.Notification", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsRead")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("NotificationDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Notifications");
-                });
-
             modelBuilder.Entity("AibolitAPI.Models.Patient", b =>
                 {
                     b.Property<Guid>("Id")
@@ -334,6 +305,34 @@ namespace AibolitAPI.Migrations
                     b.ToTable("Roles");
                 });
 
+            modelBuilder.Entity("AibolitAPI.Models.ScheduleAdjustment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<TimeSpan>("EndTime")
+                        .HasColumnType("interval");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("SpecificDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("interval");
+
+                    b.Property<Guid>("WorkScheduleId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorkScheduleId");
+
+                    b.ToTable("ScheduleAdjustments");
+                });
+
             modelBuilder.Entity("AibolitAPI.Models.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -369,12 +368,14 @@ namespace AibolitAPI.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("DaysOfWeek")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("integer");
 
                     b.Property<TimeSpan>("EndTime")
                         .HasColumnType("interval");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
 
                     b.Property<TimeSpan>("StartTime")
                         .HasColumnType("interval");
@@ -501,17 +502,6 @@ namespace AibolitAPI.Migrations
                     b.Navigation("CreatedBy");
                 });
 
-            modelBuilder.Entity("AibolitAPI.Models.Notification", b =>
-                {
-                    b.HasOne("AibolitAPI.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("AibolitAPI.Models.Patient", b =>
                 {
                     b.HasOne("AibolitAPI.Models.Administrator", null)
@@ -590,6 +580,17 @@ namespace AibolitAPI.Migrations
                     b.Navigation("Patient");
                 });
 
+            modelBuilder.Entity("AibolitAPI.Models.ScheduleAdjustment", b =>
+                {
+                    b.HasOne("AibolitAPI.Models.WorkSchedule", "WorkSchedule")
+                        .WithMany("ScheduleAdjustments")
+                        .HasForeignKey("WorkScheduleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("WorkSchedule");
+                });
+
             modelBuilder.Entity("AibolitAPI.Models.User", b =>
                 {
                     b.HasOne("AibolitAPI.Models.Role", "Role")
@@ -660,6 +661,11 @@ namespace AibolitAPI.Migrations
             modelBuilder.Entity("AibolitAPI.Models.Role", b =>
                 {
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("AibolitAPI.Models.WorkSchedule", b =>
+                {
+                    b.Navigation("ScheduleAdjustments");
                 });
 #pragma warning restore 612, 618
         }

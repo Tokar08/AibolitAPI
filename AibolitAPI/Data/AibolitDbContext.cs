@@ -16,9 +16,9 @@ public class AibolitDbContext : DbContext
     public DbSet<Administrator> Administrators { get; set; }
     public DbSet<Patient> Patients { get; set; }
     public DbSet<WorkSchedule> WorkSchedules { get; set; }
+    public DbSet<ScheduleAdjustment> ScheduleAdjustments { get; set; }
     public DbSet<Hospital> Hospitals { get; set; }
     public DbSet<MedicalRecord> MedicalRecords { get; set; }
-    public DbSet<Notification> Notifications { get; set; }
     public DbSet<Prescription> Prescriptions { get; set; }
     public DbSet<Recommendation> Recommendations { get; set; }
     public DbSet<Appointment> Appointments { get; set; }
@@ -85,7 +85,7 @@ public class AibolitDbContext : DbContext
             .HasMany(a => a.Patients)
             .WithOne()
             .OnDelete(DeleteBehavior.Restrict);
- 
+
 
         // ---== Patient ==---
         modelBuilder.Entity<Patient>()
@@ -98,9 +98,16 @@ public class AibolitDbContext : DbContext
             .OnDelete(DeleteBehavior.Restrict);
 
 
+        // ---== ScheduleAdjustment ==---
+        modelBuilder.Entity<ScheduleAdjustment>()
+            .HasOne(sa => sa.WorkSchedule)
+            .WithMany(ws => ws.ScheduleAdjustments)
+            .HasForeignKey(sa => sa.WorkScheduleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         // ---== Hospital ==---
         modelBuilder.Entity<Hospital>()
-            .HasMany(h => h.Doctors) 
+            .HasMany(h => h.Doctors)
             .WithOne(d => d.Hospital)
             .HasForeignKey(d => d.HospitalId)
             .OnDelete(DeleteBehavior.Restrict);
@@ -132,19 +139,11 @@ public class AibolitDbContext : DbContext
             .OnDelete(DeleteBehavior.Restrict);
 
 
-        // ---== Notification ==---
-        modelBuilder.Entity<Notification>()
-            .HasOne(n => n.User)
-            .WithMany()
-            .HasForeignKey(n => n.UserId)
-            .OnDelete(DeleteBehavior.Restrict);
-        
-
         // ---== Filters for Active Entities ==---
         // Фильтрация только активных пользователей
         modelBuilder.Entity<User>().HasQueryFilter(u => u.IsActive);
 
-        // Администратор должен быть активным
+        // Администратор должен быть активным пользователем
         modelBuilder.Entity<Administrator>()
             .HasQueryFilter(a => a.User.IsActive);
 
@@ -152,36 +151,37 @@ public class AibolitDbContext : DbContext
         modelBuilder.Entity<Doctor>()
             .HasQueryFilter(d => d.User.IsActive && d.Hospital.IsActive);
 
-        // Пациент и его медицинская карта должны быть активными
-        modelBuilder.Entity<Patient>()
-            .HasQueryFilter(p => p.User.IsActive && p.MedicalRecord.IsActive);
+        // Пациент должен быть активным пользователем
+        modelBuilder.Entity<Patient>().HasQueryFilter(p => p.User.IsActive);
 
-        // Запись на прием должна быть активной и пациент с доктором активными
+        // Фильтр для отображения только активных записей на прием, при условии,
+        // что пациент и доктор также активны
         modelBuilder.Entity<Appointment>()
             .HasQueryFilter(a => a.IsActive && a.Patient.IsActive && a.Doctor.IsActive);
 
         // Медицинская карта должна быть активной
-        modelBuilder.Entity<MedicalRecord>()
-            .HasQueryFilter(mr => mr.IsActive && mr.Patient.IsActive);
+        modelBuilder.Entity<MedicalRecord>().HasQueryFilter(mr => mr.IsActive);
 
-        // Рецепт должен быть активным, пациент и доктор тоже
+
+        // Фильтр для активных рецептов, при условии, что пациент активен
+        // и врач, выписавший рецепт, является активным пользователем
         modelBuilder.Entity<Prescription>()
             .HasQueryFilter(p => p.IsActive && p.Patient.IsActive && p.PrescribedBy.User.IsActive);
 
-        // Рекомендация должна быть активной, пациент и врач тоже
+        // Рекомендация должна быть активной, а также пациент и врач, выдавший рекомендацию
         modelBuilder.Entity<Recommendation>()
             .HasQueryFilter(r => r.IsActive && r.Patient.IsActive && r.GivenBy.User.IsActive);
 
-        // Больница должна быть активной
+        // Фильтр для отображения только активных больниц
         modelBuilder.Entity<Hospital>()
             .HasQueryFilter(h => h.IsActive);
 
-        // Уведомление должно быть активным, пользователь активен
-        modelBuilder.Entity<Notification>()
-            .HasQueryFilter(n => n.IsActive && n.User.IsActive);
-
-        // Время работы не может быть нулевым
+        // Расписание работы должно быть активным и иметь корректное время
         modelBuilder.Entity<WorkSchedule>()
-            .HasQueryFilter(ws => ws.StartTime > TimeSpan.Zero && ws.EndTime > TimeSpan.Zero);
+            .HasQueryFilter(ws => ws.StartTime > TimeSpan.Zero && ws.EndTime > TimeSpan.Zero && ws.IsActive);
+
+        // Фильтр для активных корректировок расписания, связанных с активным расписанием работы
+        modelBuilder.Entity<ScheduleAdjustment>()
+            .HasQueryFilter(sa => sa.IsActive && sa.WorkSchedule.IsActive);
     }
 }
