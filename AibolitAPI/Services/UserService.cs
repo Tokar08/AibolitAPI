@@ -9,9 +9,10 @@ using Newtonsoft.Json.Linq;
 
 namespace AibolitAPI.Services;
 
-public class UserService
+public class UserService : IUserService
 {
     private readonly AibolitDbContext _dbContext;
+    private readonly IKeycloakService _keycloakService;
     private readonly ILogger<UserService> _logger;
     private readonly IMapper _mapper;
     private readonly INotificationSender _notificationSender;
@@ -19,7 +20,8 @@ public class UserService
     private readonly IUserRepository _userRepository;
 
     public UserService(IUserRepository userRepository, IMapper mapper, ILogger<UserService> logger,
-        AibolitDbContext dbContext, INotificationSender notificationSender, IEmailTemplateFactory templateFactory)
+        AibolitDbContext dbContext, INotificationSender notificationSender, IEmailTemplateFactory templateFactory,
+        IKeycloakService keycloakService)
     {
         _userRepository = userRepository;
         _mapper = mapper;
@@ -27,6 +29,7 @@ public class UserService
         _dbContext = dbContext;
         _notificationSender = notificationSender;
         _templateFactory = templateFactory;
+        _keycloakService = keycloakService;
     }
 
     public async Task<UserDTO> AuthenticateOrRegisterAsync(string keycloakId, string email, string userName,
@@ -109,11 +112,7 @@ public class UserService
         try
         {
             var users = await _userRepository.GetAllWithRolesAsync(page, size);
-            var sortedUsers = users.OrderBy(u => u.Role.Title).ToList();
-
-            foreach (var user in sortedUsers) Console.WriteLine($"User: {user.KeycloakId}, Role: {user.Role.Title}");
-
-            return _mapper.Map<IEnumerable<UserDTO>>(sortedUsers);
+            return _mapper.Map<IEnumerable<UserDTO>>(users);
         }
         catch (Exception ex)
         {
@@ -122,47 +121,12 @@ public class UserService
         }
     }
 
-    private async Task<string> GetAdminTokenAsync()
-    {
-        try
-        {
-            using var httpClient = new HttpClient();
-            var request = new HttpRequestMessage(HttpMethod.Post,
-                "http://localhost:8081/realms/master/protocol/openid-connect/token");
-
-            request.Content = new FormUrlEncodedContent(new Dictionary<string, string>
-            {
-                { "client_id", "admin-cli" },
-                { "username", "admin" },
-                { "password", "admin" },
-                { "grant_type", "password" }
-            });
-
-            var response = await httpClient.SendAsync(request);
-
-            if (!response.IsSuccessStatusCode)
-                throw new Exception($"Failed to retrieve admin token. Status code: {response.StatusCode}");
-
-            var content = await response.Content.ReadAsStringAsync();
-            var tokenResponse = JsonConvert.DeserializeObject<Dictionary<string, string>>(content);
-
-            if (tokenResponse == null || !tokenResponse.ContainsKey("access_token"))
-                throw new Exception("Invalid token response from Keycloak.");
-
-            return tokenResponse["access_token"];
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error while retrieving admin token from Keycloak.");
-            throw;
-        }
-    }
 
     public async Task<IEnumerable<Dictionary<string, object>>> GetAllUsersFromKeycloakAsync()
     {
         try
         {
-            var adminToken = await GetAdminTokenAsync();
+            var adminToken = await _keycloakService.GetAdminTokenAsync();
 
             using var httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
@@ -191,51 +155,42 @@ public class UserService
         }
     }
 
-
-    public async Task SynchronizeUsersWithKeycloak(string userToken)
+    public async Task<IEnumerable<Dictionary<string, object>>> GetExistingUsersAsync()
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(userToken))
-                throw new ArgumentException("Токен пользователя отсутствует или некорректен.");
+            var keycloakUsers = await GetAllUsersFromKeycloakAsync();
 
-            using var httpClient = new HttpClient();
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", userToken);
-
-            var response = await httpClient.GetAsync("http://localhost:8081/admin/realms/aibolit-api/users");
-            if (!response.IsSuccessStatusCode)
-                throw new Exception(
-                    $"Не удалось получить пользователей из Keycloak. Код ошибки: {response.StatusCode}");
-
-            var keycloakUsersJson = await response.Content.ReadAsStringAsync();
-            var keycloakUsers = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(keycloakUsersJson);
-
-            if (keycloakUsers == null || !keycloakUsers.Any())
-                throw new Exception("Список пользователей из Keycloak пуст.");
-
-            // Извлекаем KeycloakId из ответа
-            var keycloakIds = keycloakUsers
-                .Where(u => u.ContainsKey("id"))
-                .Select(u => u["id"]?.ToString())
-                .Where(id => !string.IsNullOrWhiteSpace(id))
+            var dbUserKeycloakIds = _dbContext.Users
+                .Select(u => u.KeycloakId)
                 .ToHashSet();
 
-            // Получаем пользователей из БД
-            var dbUsers = await _userRepository.GetAllAsync(1, int.MaxValue);
+            var existingUsers = keycloakUsers
+                .Where(kcUser => kcUser.TryGetValue("id", out var id) && dbUserKeycloakIds.Contains(id?.ToString()))
+                .ToList();
 
-            // Удаляем пользователей, которых нет в Keycloak
-            var usersToDelete = dbUsers.Where(dbUser => !keycloakIds.Contains(dbUser.KeycloakId)).ToList();
-            foreach (var user in usersToDelete)
-            {
-                await _userRepository.SoftDeleteAsync(user.Id);
-                Console.WriteLine($"Удалён пользователь из БД: {user.KeycloakId}");
-            }
-
-            Console.WriteLine("Синхронизация завершена.");
+            return existingUsers;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка во время синхронизации с Keycloak.");
+            _logger.LogError(ex, "Error while retrieving existing users.");
+            throw;
+        }
+    }
+
+
+    public async Task<IEnumerable<UserDTO>> GetUsersWithSSOAsync(int page, int size)
+    {
+        try
+        {
+            var dbUsers = await _userRepository.GetAllWithRolesAsync(page, size);
+            return await _keycloakService.GetEntitiesWithSSOAsync<UserDTO, User>(
+                dbUsers,
+                user => user.KeycloakId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error while getting users with SSO data.");
             throw;
         }
     }
@@ -246,14 +201,27 @@ public class UserService
         try
         {
             var user = await _userRepository.GetByIdAsync(id);
-            return _mapper.Map<UserDTO>(user);
+
+            if (user == null)
+            {
+                _logger.LogWarning($"User with ID: {id} was not found.");
+                throw new KeyNotFoundException($"User with ID: {id} was not found.");
+            }
+
+            var userWithSSO = await _keycloakService.GetEntityWithSSOAsync<UserDTO, User>(
+                user,
+                u => u.KeycloakId.ToString()
+            );
+
+            return userWithSSO;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, $"Error occurred while getting user with ID: {id}");
-            throw;
+            throw new Exception($"Error occurred while processing user with ID: {id}", ex);
         }
     }
+
 
     public async Task CreateAsync(UserDTO userDto)
     {

@@ -24,7 +24,7 @@ public class KeycloakMiddleware
             var token = authorizationHeader.Substring("Bearer ".Length).Trim();
 
             using var scope = _scopeFactory.CreateScope();
-            var keycloakService = scope.ServiceProvider.GetRequiredService<KeycloakService>();
+            var keycloakService = scope.ServiceProvider.GetRequiredService<IKeycloakService>();
             await keycloakService.ProcessTokenAsync(token);
         }
 

@@ -2,11 +2,10 @@
 using AibolitAPI.Interfaces;
 using AibolitAPI.Models;
 using AutoMapper;
-using Microsoft.EntityFrameworkCore;
 
 namespace AibolitAPI.Services;
 
-public class AppointmentService
+public class AppointmentService : IAppointmentService
 {
     private readonly IAppointmentRepository _appointmentRepository;
     private readonly ILogger<AppointmentService> _logger;

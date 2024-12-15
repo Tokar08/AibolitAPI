@@ -5,21 +5,28 @@ using AutoMapper;
 
 namespace AibolitAPI.Services;
 
-public class AdministratorService
+public class AdministratorService : IAdministratorService
 {
     private readonly IAdministratorRepository _administratorRepository;
+    private readonly IDoctorRepository _doctorRepository;
     private readonly IHospitalRepository _hospitalRepository;
+    private readonly IKeycloakService _keycloakService;
     private readonly ILogger<AdministratorService> _logger;
     private readonly IMapper _mapper;
+    private readonly IPatientRepository _patientRepository;
 
-    public AdministratorService(IAdministratorRepository administratorRepository,
+    public AdministratorService(IAdministratorRepository administratorRepository, IDoctorRepository doctorRepository,
         IHospitalRepository hospitalRepository,
-        IMapper mapper, ILogger<AdministratorService> logger)
+        IMapper mapper, ILogger<AdministratorService> logger, IKeycloakService keycloakService,
+        IPatientRepository patientRepository)
     {
         _administratorRepository = administratorRepository;
+        _doctorRepository = doctorRepository;
         _hospitalRepository = hospitalRepository;
         _mapper = mapper;
         _logger = logger;
+        _keycloakService = keycloakService;
+        _patientRepository = patientRepository;
     }
 
     public async Task<IEnumerable<AdministratorDTO>> GetAllAsync(int page, int size)
@@ -36,17 +43,37 @@ public class AdministratorService
         }
     }
 
-    public async Task<AdministratorDTO> GetByIdAsync(Guid id)
+    public async Task<string> GetAllAdministratorWithSSOAsync(int page, int size)
+    {
+        var dbAdministrators = await _administratorRepository.GetAllAsync(page, size);
+        var administratorsWithSSO = await _keycloakService.GetEntitiesWithSSOAsync<AdministratorDTO, Administrator>(
+            dbAdministrators,
+            admin => admin.User.KeycloakId.ToString()
+        );
+
+        await Task.WhenAll(administratorsWithSSO.Select(admin => UpdateDoctorsAndPatients(admin, page, size)));
+
+        return _keycloakService.Serialize(administratorsWithSSO);
+    }
+
+    public async Task<string> GetByIdAsync(Guid id)
     {
         try
         {
-            var administrator = await _administratorRepository.GetByIdAsync(id);
-            return _mapper.Map<AdministratorDTO>(administrator);
+            var dbAdministrator = await _administratorRepository.GetByIdAsync(id) ??
+                                  throw new KeyNotFoundException($"Administrator with ID: {id} was not found.");
+            var administratorWithSSO = await _keycloakService.GetEntityWithSSOAsync<AdministratorDTO, Administrator>(
+                dbAdministrator,
+                admin => admin.User.KeycloakId.ToString()
+            );
+
+            await UpdateDoctorsAndPatients(administratorWithSSO, 1, int.MaxValue);
+            return _keycloakService.Serialize(administratorWithSSO);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, $"Error occurred while getting administrator with ID: {id}");
-            throw;
+            throw new Exception($"Error occurred while processing administrator with ID: {id}", ex);
         }
     }
 
@@ -123,6 +150,63 @@ public class AdministratorService
         {
             _logger.LogError(ex, $"Error occurred while soft deleting administrator with ID: {id}");
             throw;
+        }
+    }
+
+    private async Task UpdateDoctorsAndPatients(AdministratorDTO administrator, int page, int size)
+    {
+        if (administrator.Doctors != null && administrator.Doctors.Count != 0)
+            await UpdateDoctors(administrator.Doctors, page, size);
+
+        if (administrator.Patients != null && administrator.Patients.Count != 0)
+            await UpdatePatients(administrator.Patients, page, size);
+    }
+
+    private async Task UpdateDoctors(IEnumerable<DoctorDTO> doctors, int page, int size)
+    {
+        var doctorEntities = await _keycloakService.GetEntitiesWithSSOAsync<DoctorDTO, Doctor>(
+            await _doctorRepository.GetAllAsync(page, size),
+            doctor => doctor.User.KeycloakId.ToString()
+        );
+
+        foreach (var doctor in doctors)
+        {
+            var doctorEntity = doctorEntities.FirstOrDefault(d => d.Id == doctor.Id);
+            if (doctorEntity == null) continue;
+
+            doctor.Email = doctorEntity.Email;
+            doctor.FirstName = doctorEntity.FirstName;
+            doctor.LastName = doctorEntity.LastName;
+            doctor.PhoneNumber = doctorEntity.PhoneNumber;
+            doctor.Gender = doctorEntity.Gender;
+            doctor.City = doctorEntity.City;
+            doctor.BirthDate = doctorEntity.BirthDate;
+
+
+            if (doctor.Patients != null && doctor.Patients.Count != 0)
+                await UpdatePatients(doctor.Patients, page, size);
+        }
+    }
+
+    private async Task UpdatePatients(IEnumerable<PatientDTO> patients, int page, int size)
+    {
+        var patientEntities = await _keycloakService.GetEntitiesWithSSOAsync<PatientDTO, Patient>(
+            await _patientRepository.GetAllAsync(page, size),
+            patient => patient.User.KeycloakId.ToString()
+        );
+
+        foreach (var patient in patients)
+        {
+            var patientEntity = patientEntities.FirstOrDefault(p => p.Id == patient.Id);
+            if (patientEntity == null) continue;
+
+            patient.Email = patientEntity.Email;
+            patient.FirstName = patientEntity.FirstName;
+            patient.LastName = patientEntity.LastName;
+            patient.PhoneNumber = patientEntity.PhoneNumber;
+            patient.Gender = patientEntity.Gender;
+            patient.City = patientEntity.City;
+            patient.BirthDate = patientEntity.BirthDate;
         }
     }
 }

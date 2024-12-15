@@ -1,6 +1,7 @@
 ﻿using AibolitAPI.Data;
 using AibolitAPI.Interfaces;
 using AibolitAPI.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace AibolitAPI.Repositories;
 
@@ -36,5 +37,12 @@ public class DoctorRepository : Repository<Doctor>, IDoctorRepository
         {
             throw new InvalidOperationException("Error deleting photo from cloud storage.", ex);
         }
+    }
+
+    public async Task<IEnumerable<Doctor>> GetDoctorsByUserIdsAsync(List<Guid> userIds)
+    {
+        return await _context.Doctors
+            .Where(doctor => userIds.Contains(doctor.UserId))
+            .ToListAsync();
     }
 }

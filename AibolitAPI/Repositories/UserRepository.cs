@@ -30,8 +30,8 @@ public class UserRepository : Repository<User>, IUserRepository
     public async Task<IEnumerable<User>> GetAllWithRolesAsync(int page, int size)
     {
         return await _context.Users
-            .Include(u => u.Role) // Подгружаем роли
-            .OrderBy(u => u.Role.Title) // Сортируем сразу на уровне базы данных
+            .Include(u => u.Role)
+            .OrderBy(u => u.Role.Title)
             .Skip((page - 1) * size)
             .Take(size)
             .ToListAsync();

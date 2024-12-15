@@ -1,26 +1,19 @@
 ﻿using AibolitAPI.DTOs;
-using AibolitAPI.Services;
+using AibolitAPI.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AibolitAPI.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class WorkScheduleController : ControllerBase
+public class WorkScheduleController(IWorkScheduleService workScheduleService) : ControllerBase
 {
-    private readonly WorkScheduleService _workScheduleService;
-
-    public WorkScheduleController(WorkScheduleService workScheduleService)
-    {
-        _workScheduleService = workScheduleService;
-    }
-
     [HttpGet]
     public async Task<ActionResult<IEnumerable<WorkScheduleDTO>>> GetAllAsync(int page = 1, int size = 10)
     {
         try
         {
-            var workSchedules = await _workScheduleService.GetAllAsync(page, size);
+            var workSchedules = await workScheduleService.GetAllAsync(page, size);
             return Ok(workSchedules);
         }
         catch (Exception ex)
@@ -34,7 +27,7 @@ public class WorkScheduleController : ControllerBase
     {
         try
         {
-            var workSchedule = await _workScheduleService.GetByIdAsync(id);
+            var workSchedule = await workScheduleService.GetByIdAsync(id);
             if (workSchedule == null)
                 return NotFound();
             return Ok(workSchedule);
@@ -50,7 +43,7 @@ public class WorkScheduleController : ControllerBase
     {
         try
         {
-            await _workScheduleService.CreateAsync(workScheduleDto);
+            await workScheduleService.CreateAsync(workScheduleDto);
             return Created($"api/WorkSchedule/{workScheduleDto.Id}", workScheduleDto);
         }
         catch (Exception ex)
@@ -66,7 +59,7 @@ public class WorkScheduleController : ControllerBase
         {
             if (id != workScheduleDto.Id) return BadRequest(new { message = "ID mismatch" });
 
-            await _workScheduleService.UpdateAsync(workScheduleDto);
+            await workScheduleService.UpdateAsync(workScheduleDto);
             return NoContent();
         }
         catch (Exception ex)
@@ -80,7 +73,7 @@ public class WorkScheduleController : ControllerBase
     {
         try
         {
-            await _workScheduleService.SoftDeleteAsync(id);
+            await workScheduleService.SoftDeleteAsync(id);
             return NoContent();
         }
         catch (Exception ex)

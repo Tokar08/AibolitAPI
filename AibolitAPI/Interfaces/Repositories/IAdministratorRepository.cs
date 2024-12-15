@@ -2,7 +2,7 @@
 
 namespace AibolitAPI.Interfaces;
 
-public interface IAdministratorRepository
+public interface IAdministratorRepository : IRepository<Administrator>
 {
     Task<IEnumerable<Administrator>> GetAllAsync(int page, int size);
     Task<Administrator?> GetByIdAsync(Guid id);

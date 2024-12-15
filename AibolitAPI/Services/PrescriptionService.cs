@@ -2,11 +2,10 @@
 using AibolitAPI.Interfaces;
 using AibolitAPI.Models;
 using AutoMapper;
-using Microsoft.EntityFrameworkCore;
 
 namespace AibolitAPI.Services;
 
-public class PrescriptionService
+public class PrescriptionService : IPrescriptionService
 {
     private readonly ILogger<PrescriptionService> _logger;
     private readonly IMapper _mapper;

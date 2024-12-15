@@ -1,14 +1,13 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using AibolitAPI.Interfaces;
-using AibolitAPI.Services;
 
 namespace AibolitAPI.Auth;
 
 public class RoleValidator : IRoleValidator
 {
-    private readonly UserService _userService;
+    private readonly IUserService _userService;
 
-    public RoleValidator(UserService userService)
+    public RoleValidator(IUserService userService)
     {
         _userService = userService ?? throw new ArgumentNullException(nameof(userService));
     }

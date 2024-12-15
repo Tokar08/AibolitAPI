@@ -23,21 +23,21 @@ public class MapperProfile : Profile
             .ForMember(dest => dest.Doctors, opt => opt.MapFrom(src => src.Doctors))
             .ForMember(dest => dest.Patients, opt => opt.MapFrom(src => src.Patients))
             .ReverseMap()
-            .MaxDepth(3);
+            .MaxDepth(2);
 
         // Mapping for Doctor <-> DoctorDTO
         CreateMap<Doctor, DoctorDTO>()
             .ForMember(dest => dest.Patients, opt => opt.MapFrom(src => src.Patients))
             .ForMember(dest => dest.LikedByPatients, opt => opt.MapFrom(src => src.LikedByPatients))
             .ReverseMap()
-            .MaxDepth(3);
+            .MaxDepth(2);
 
         // Mapping for Patient <-> PatientDTO
         CreateMap<Patient, PatientDTO>()
             .ForMember(dest => dest.LikedDoctors, opt => opt.MapFrom(src => src.LikedDoctors))
             .ForMember(dest => dest.Doctors, opt => opt.MapFrom(src => src.Doctors))
             .ReverseMap()
-            .MaxDepth(3);
+            .MaxDepth(2);
 
         // Mapping for MedicalRecord <-> MedicalRecordDTO
         CreateMap<MedicalRecord, MedicalRecordDTO>()
@@ -45,7 +45,8 @@ public class MapperProfile : Profile
             .ForMember(dest => dest.Appointments, opt => opt.MapFrom(src => src.Appointments))
             .ForMember(dest => dest.Prescriptions, opt => opt.MapFrom(src => src.Prescriptions))
             .ForMember(dest => dest.Recommendations, opt => opt.MapFrom(src => src.Recommendations))
-            .ReverseMap();
+            .ReverseMap()
+            .MaxDepth(2);
 
         // Mapping for Appointment <-> AppointmentDTO
         CreateMap<Appointment, AppointmentDTO>()

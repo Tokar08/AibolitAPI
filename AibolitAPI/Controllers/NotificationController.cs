@@ -5,22 +5,15 @@ namespace AibolitAPI.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class NotificationController : ControllerBase
+public class NotificationController(NotificationService notificationService) : ControllerBase
 {
-    private readonly NotificationService _notificationService;
-
-    public NotificationController(NotificationService notificationService)
-    {
-        _notificationService = notificationService;
-    }
-
     [HttpPost("send-email")]
     public async Task<IActionResult> SendEmail([FromQuery] string recipient, [FromQuery] string type,
         [FromBody] string model)
     {
         try
         {
-            await _notificationService.SendEmailAsync(recipient, type, model);
+            await notificationService.SendEmailAsync(recipient, type, model);
             return Ok("Email sent successfully.");
         }
         catch (ArgumentException ex)

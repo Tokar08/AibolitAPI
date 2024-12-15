@@ -22,6 +22,12 @@ public class AdministratorRepository : IAdministratorRepository
             .ToListAsync();
     }
 
+    public Task<IEnumerable<Administrator>> GetAllAsync(int page, int size,
+        Func<IQueryable<Administrator>, IQueryable<Administrator>>? include)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<Administrator?> GetByIdAsync(Guid id)
     {
         return await _context.Administrators

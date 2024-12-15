@@ -5,13 +5,14 @@ using AutoMapper;
 
 namespace AibolitAPI.Services;
 
-public class WorkScheduleService
+public class WorkScheduleService : IWorkScheduleService
 {
-    private readonly IWorkScheduleRepository _workScheduleRepository;
-    private readonly IMapper _mapper;
     private readonly ILogger<WorkScheduleService> _logger;
+    private readonly IMapper _mapper;
+    private readonly IWorkScheduleRepository _workScheduleRepository;
 
-    public WorkScheduleService(IWorkScheduleRepository workScheduleRepository, IMapper mapper, ILogger<WorkScheduleService> logger)
+    public WorkScheduleService(IWorkScheduleRepository workScheduleRepository, IMapper mapper,
+        ILogger<WorkScheduleService> logger)
     {
         _workScheduleRepository = workScheduleRepository;
         _mapper = mapper;

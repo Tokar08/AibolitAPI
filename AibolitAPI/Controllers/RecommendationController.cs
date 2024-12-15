@@ -1,26 +1,19 @@
 ﻿using AibolitAPI.DTOs;
-using AibolitAPI.Services;
+using AibolitAPI.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AibolitAPI.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class RecommendationController : ControllerBase
+public class RecommendationController(IRecommendationService recommendationService) : ControllerBase
 {
-    private readonly RecommendationService _recommendationService;
-
-    public RecommendationController(RecommendationService recommendationService)
-    {
-        _recommendationService = recommendationService;
-    }
-
     [HttpGet]
     public async Task<ActionResult<IEnumerable<RecommendationDTO>>> GetAllAsync(int page = 1, int size = 10)
     {
         try
         {
-            var recommendations = await _recommendationService.GetAllAsync(page, size);
+            var recommendations = await recommendationService.GetAllAsync(page, size);
             return Ok(recommendations);
         }
         catch (Exception ex)
@@ -34,7 +27,7 @@ public class RecommendationController : ControllerBase
     {
         try
         {
-            var recommendation = await _recommendationService.GetByIdAsync(id);
+            var recommendation = await recommendationService.GetByIdAsync(id);
             if (recommendation == null)
                 return NotFound();
             return Ok(recommendation);
@@ -50,7 +43,7 @@ public class RecommendationController : ControllerBase
     {
         try
         {
-            await _recommendationService.CreateAsync(recommendationDto);
+            await recommendationService.CreateAsync(recommendationDto);
             return Created($"api/Recommendation/{recommendationDto.Id}", recommendationDto);
         }
         catch (Exception ex)
@@ -66,7 +59,7 @@ public class RecommendationController : ControllerBase
         {
             if (id != recommendationDto.Id) return BadRequest(new { message = "ID mismatch" });
 
-            await _recommendationService.UpdateAsync(recommendationDto);
+            await recommendationService.UpdateAsync(recommendationDto);
             return NoContent();
         }
         catch (Exception ex)
@@ -80,7 +73,7 @@ public class RecommendationController : ControllerBase
     {
         try
         {
-            await _recommendationService.SoftDeleteAsync(id);
+            await recommendationService.SoftDeleteAsync(id);
             return NoContent();
         }
         catch (Exception ex)

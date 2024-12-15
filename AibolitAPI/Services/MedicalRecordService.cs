@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AibolitAPI.Services;
 
-public class MedicalRecordService
+public class MedicalRecordService : IMedicalRecordService
 {
     private readonly ILogger<MedicalRecordService> _logger;
     private readonly IMapper _mapper;

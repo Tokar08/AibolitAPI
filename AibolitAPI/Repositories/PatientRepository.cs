@@ -27,6 +27,8 @@ public class PatientRepository : IPatientRepository
     {
         var query = _context.Patients.AsQueryable();
 
+        query = query.Include(p => p.User);
+
         if (include != null) query = include(query);
 
         var patients = await query
@@ -36,6 +38,7 @@ public class PatientRepository : IPatientRepository
 
         return patients;
     }
+
 
     public async Task<Patient?> GetByIdAsync(Guid id)
     {

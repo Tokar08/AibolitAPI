@@ -1,26 +1,19 @@
 ﻿using AibolitAPI.DTOs;
-using AibolitAPI.Services;
+using AibolitAPI.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AibolitAPI.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class AppointmentController : ControllerBase
+public class AppointmentController(IAppointmentService appointmentService) : ControllerBase
 {
-    private readonly AppointmentService _appointmentService;
-
-    public AppointmentController(AppointmentService appointmentService)
-    {
-        _appointmentService = appointmentService;
-    }
-
     [HttpGet]
     public async Task<ActionResult<IEnumerable<AppointmentDTO>>> GetAllAsync(int page = 1, int size = 10)
     {
         try
         {
-            var appointments = await _appointmentService.GetAllAsync(page, size);
+            var appointments = await appointmentService.GetAllAsync(page, size);
             return Ok(appointments);
         }
         catch (Exception ex)
@@ -34,7 +27,7 @@ public class AppointmentController : ControllerBase
     {
         try
         {
-            var appointment = await _appointmentService.GetByIdAsync(id);
+            var appointment = await appointmentService.GetByIdAsync(id);
             if (appointment == null)
                 return NotFound();
             return Ok(appointment);
@@ -50,7 +43,7 @@ public class AppointmentController : ControllerBase
     {
         try
         {
-            await _appointmentService.CreateAsync(appointmentDto);
+            await appointmentService.CreateAsync(appointmentDto);
             return Created($"api/Appointment/{appointmentDto.Id}", appointmentDto);
         }
         catch (Exception ex)
@@ -66,7 +59,7 @@ public class AppointmentController : ControllerBase
         {
             if (id != appointmentDto.Id) return BadRequest(new { message = "ID mismatch" });
 
-            await _appointmentService.UpdateAsync(appointmentDto);
+            await appointmentService.UpdateAsync(appointmentDto);
             return NoContent();
         }
         catch (Exception ex)
@@ -80,7 +73,7 @@ public class AppointmentController : ControllerBase
     {
         try
         {
-            await _appointmentService.SoftDeleteAsync(id);
+            await appointmentService.SoftDeleteAsync(id);
             return NoContent();
         }
         catch (Exception ex)

@@ -1,26 +1,19 @@
 ﻿using AibolitAPI.DTOs;
-using AibolitAPI.Services;
+using AibolitAPI.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AibolitAPI.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class UserController : ControllerBase
+public class UserController(IUserService userService) : ControllerBase
 {
-    private readonly UserService _userService;
-
-    public UserController(UserService userService)
-    {
-        _userService = userService;
-    }
-
     [HttpGet]
     public async Task<ActionResult<IEnumerable<UserDTO>>> GetAllAsync(int page = 1, int size = 10)
     {
         try
         {
-            var users = await _userService.GetAllUsersFromKeycloakAsync();
+            var users = await userService.GetUsersWithSSOAsync(page, size);
             return Ok(users);
         }
         catch (Exception ex)
@@ -29,34 +22,12 @@ public class UserController : ControllerBase
         }
     }
 
-    [HttpGet("synchronize")]
-    public async Task<IActionResult> SynchronizeUsersWithKeycloak(
-        [FromHeader(Name = "Authorization")] string authorization)
-    {
-        if (string.IsNullOrWhiteSpace(authorization))
-            return BadRequest(new { message = "Заголовок Authorization отсутствует." });
-
-        var token = authorization.Replace("Bearer ", "", StringComparison.OrdinalIgnoreCase);
-
-        // Пример вызова логики синхронизации
-        try
-        {
-            await _userService.SynchronizeUsersWithKeycloak(token);
-            return Ok(new { message = "Синхронизация завершена." });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { message = "Произошла ошибка.", details = ex.Message });
-        }
-    }
-
-
     [HttpGet("{id}")]
     public async Task<ActionResult<UserDTO>> GetByIdAsync(Guid id)
     {
         try
         {
-            var user = await _userService.GetByIdAsync(id);
+            var user = await userService.GetByIdAsync(id);
             if (user == null) return NotFound();
             return Ok(user);
         }
@@ -71,7 +42,7 @@ public class UserController : ControllerBase
     {
         try
         {
-            await _userService.CreateAsync(userDto);
+            await userService.CreateAsync(userDto);
             return Created($"api/User/{userDto.Id}", userDto);
         }
         catch (Exception ex)
@@ -87,7 +58,7 @@ public class UserController : ControllerBase
         {
             if (id != userDto.Id) return BadRequest(new { message = "User ID mismatch" });
 
-            await _userService.UpdateAsync(userDto);
+            await userService.UpdateAsync(userDto);
             return NoContent();
         }
         catch (Exception ex)
@@ -101,7 +72,7 @@ public class UserController : ControllerBase
     {
         try
         {
-            await _userService.SoftDeleteAsync(id);
+            await userService.SoftDeleteAsync(id);
             return NoContent();
         }
         catch (Exception ex)

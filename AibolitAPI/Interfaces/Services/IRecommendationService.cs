@@ -1,0 +1,12 @@
+﻿using AibolitAPI.DTOs;
+
+namespace AibolitAPI.Interfaces;
+
+public interface IRecommendationService
+{
+    Task<IEnumerable<RecommendationDTO>> GetAllAsync(int page, int size);
+    Task<RecommendationDTO> GetByIdAsync(Guid id);
+    Task CreateAsync(RecommendationDTO recommendationDto);
+    Task UpdateAsync(RecommendationDTO recommendationDto);
+    Task SoftDeleteAsync(Guid id);
+}

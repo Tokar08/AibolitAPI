@@ -1,26 +1,19 @@
 ﻿using AibolitAPI.DTOs;
-using AibolitAPI.Services;
+using AibolitAPI.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AibolitAPI.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class HospitalController : ControllerBase
+public class HospitalController(IHospitalService hospitalService) : ControllerBase
 {
-    private readonly HospitalService _hospitalService;
-
-    public HospitalController(HospitalService hospitalService)
-    {
-        _hospitalService = hospitalService;
-    }
-
     [HttpGet]
     public async Task<ActionResult<IEnumerable<HospitalDTO>>> GetAllAsync(int page = 1, int size = 10)
     {
         try
         {
-            var hospitals = await _hospitalService.GetAllAsync(page, size);
+            var hospitals = await hospitalService.GetAllHospitalsWithDetailsAsync(page, size);
             return Ok(hospitals);
         }
         catch (Exception ex)
@@ -34,7 +27,7 @@ public class HospitalController : ControllerBase
     {
         try
         {
-            var hospital = await _hospitalService.GetByIdAsync(id);
+            var hospital = await hospitalService.GetByIdAsync(id);
             if (hospital == null)
                 return NotFound();
             return Ok(hospital);
@@ -50,7 +43,7 @@ public class HospitalController : ControllerBase
     {
         try
         {
-            await _hospitalService.CreateAsync(hospitalDto);
+            await hospitalService.CreateAsync(hospitalDto);
             return Created($"api/Hospital/{hospitalDto.Id}", hospitalDto);
         }
         catch (Exception ex)
@@ -66,7 +59,7 @@ public class HospitalController : ControllerBase
         {
             if (id != hospitalDto.Id) return BadRequest(new { message = "ID mismatch" });
 
-            await _hospitalService.UpdateAsync(hospitalDto);
+            await hospitalService.UpdateAsync(hospitalDto);
             return NoContent();
         }
         catch (Exception ex)
@@ -80,7 +73,7 @@ public class HospitalController : ControllerBase
     {
         try
         {
-            await _hospitalService.SoftDeleteAsync(id);
+            await hospitalService.SoftDeleteAsync(id);
             return NoContent();
         }
         catch (Exception ex)

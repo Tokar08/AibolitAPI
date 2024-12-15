@@ -44,43 +44,46 @@ builder.Services.AddAutoMapper(config => { config.AddProfile<MapperProfile>(); }
 
 // Регистрация сервисов и репозиториев
 builder.Services.AddScoped<IAdministratorRepository, AdministratorRepository>();
-builder.Services.AddScoped<AdministratorService>();
+builder.Services.AddScoped<IAdministratorService, AdministratorService>();
 
 builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
-builder.Services.AddScoped<AppointmentService>();
+builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 
 builder.Services.AddScoped<IDoctorRepository, DoctorRepository>();
-builder.Services.AddScoped<DoctorService>();
+builder.Services.AddScoped<IDoctorService, DoctorService>();
 
 builder.Services.AddScoped<ICloudStorageService, GoogleCloudStorageService>();
 
 builder.Services.AddScoped<IHospitalRepository, HospitalRepository>();
-builder.Services.AddScoped<HospitalService>();
+builder.Services.AddScoped<IHospitalService, HospitalService>();
 
 builder.Services.AddScoped<IMedicalRecordRepository, MedicalRecordRepository>();
-builder.Services.AddScoped<MedicalRecordService>();
+builder.Services.AddScoped<IMedicalRecordService, MedicalRecordService>();
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddScoped<IPatientRepository, PatientRepository>();
-builder.Services.AddScoped<PatientService>();
+builder.Services.AddScoped<IPatientService, PatientService>();
 
 builder.Services.AddScoped<IPrescriptionRepository, PrescriptionRepository>();
-builder.Services.AddScoped<PrescriptionService>();
+builder.Services.AddScoped<IPrescriptionService, PrescriptionService>();
 
 builder.Services.AddScoped<IRecommendationRepository, RecommendationRepository>();
-builder.Services.AddScoped<RecommendationService>();
+builder.Services.AddScoped<IRecommendationService, RecommendationService>();
 
 builder.Services.AddScoped<IWorkScheduleRepository, WorkScheduleRepository>();
-builder.Services.AddScoped<WorkScheduleService>();
+builder.Services.AddScoped<IWorkScheduleService, WorkScheduleService>();
+
+builder.Services.AddScoped<IStatisticsService, StatisticsService>();
 
 builder.Services.AddScoped<IRoleValidator, RoleValidator>();
-builder.Services.AddScoped<KeycloakService>();
+builder.Services.AddScoped<IKeycloakService, KeycloakService>();
 builder.Services.AddScoped<ITranslationService, GoogleTranslationService>();
 
 builder.Services.AddHttpClient<GeminiDiseaseSearchProvider>();
 builder.Services.AddHttpClient<ExternalApiSearchProvider>();
+
 
 builder.Services.AddScoped<Func<string, IDiseaseSearchProvider>>(serviceProvider => provider =>
 {

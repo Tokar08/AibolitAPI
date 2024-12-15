@@ -1,26 +1,19 @@
 ﻿using AibolitAPI.DTOs;
-using AibolitAPI.Services;
+using AibolitAPI.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AibolitAPI.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class PrescriptionController : ControllerBase
+public class PrescriptionController(IPrescriptionService prescriptionService) : ControllerBase
 {
-    private readonly PrescriptionService _prescriptionService;
-
-    public PrescriptionController(PrescriptionService prescriptionService)
-    {
-        _prescriptionService = prescriptionService;
-    }
-
     [HttpGet]
     public async Task<ActionResult<IEnumerable<PrescriptionDTO>>> GetAllAsync(int page = 1, int size = 10)
     {
         try
         {
-            var prescriptions = await _prescriptionService.GetAllAsync(page, size);
+            var prescriptions = await prescriptionService.GetAllAsync(page, size);
             return Ok(prescriptions);
         }
         catch (Exception ex)
@@ -34,7 +27,7 @@ public class PrescriptionController : ControllerBase
     {
         try
         {
-            var prescription = await _prescriptionService.GetByIdAsync(id);
+            var prescription = await prescriptionService.GetByIdAsync(id);
             if (prescription == null)
                 return NotFound();
             return Ok(prescription);
@@ -50,7 +43,7 @@ public class PrescriptionController : ControllerBase
     {
         try
         {
-            await _prescriptionService.CreateAsync(prescriptionDto);
+            await prescriptionService.CreateAsync(prescriptionDto);
             return Created($"api/Prescription/{prescriptionDto.Id}", prescriptionDto);
         }
         catch (Exception ex)
@@ -66,7 +59,7 @@ public class PrescriptionController : ControllerBase
         {
             if (id != prescriptionDto.Id) return BadRequest(new { message = "ID mismatch" });
 
-            await _prescriptionService.UpdateAsync(prescriptionDto);
+            await prescriptionService.UpdateAsync(prescriptionDto);
             return NoContent();
         }
         catch (Exception ex)
@@ -80,7 +73,7 @@ public class PrescriptionController : ControllerBase
     {
         try
         {
-            await _prescriptionService.SoftDeleteAsync(id);
+            await prescriptionService.SoftDeleteAsync(id);
             return NoContent();
         }
         catch (Exception ex)

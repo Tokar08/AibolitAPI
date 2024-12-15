@@ -1,26 +1,19 @@
 ﻿using AibolitAPI.DTOs;
-using AibolitAPI.Services;
+using AibolitAPI.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AibolitAPI.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class DoctorController : ControllerBase
+public class DoctorController(IDoctorService doctorService) : ControllerBase
 {
-    private readonly DoctorService _doctorService;
-
-    public DoctorController(DoctorService doctorService)
-    {
-        _doctorService = doctorService;
-    }
-
     [HttpGet]
     public async Task<ActionResult<IEnumerable<DoctorDTO>>> GetAllAsync(int page = 1, int size = 10)
     {
         try
         {
-            var doctors = await _doctorService.GetAllAsync(page, size);
+            var doctors = await doctorService.GetAllDoctorsWithSSOAsync(page, size);
             return Ok(doctors);
         }
         catch (Exception ex)
@@ -34,7 +27,7 @@ public class DoctorController : ControllerBase
     {
         try
         {
-            var doctor = await _doctorService.GetByIdAsync(id);
+            var doctor = await doctorService.GetByIdAsync(id);
             if (doctor == null)
                 return NotFound();
             return Ok(doctor);
@@ -61,7 +54,7 @@ public class DoctorController : ControllerBase
                 photoStream = System.IO.File.OpenRead(filePath);
             }
 
-            await _doctorService.CreateWithPhotoAsync(doctorDto, photoStream,
+            await doctorService.CreateWithPhotoAsync(doctorDto, photoStream,
                 photoStream != null ? Path.GetFileName(filePath) : null);
 
             return Created($"api/Doctor/{doctorDto.Id}", new { message = "Doctor created successfully" });
@@ -85,7 +78,7 @@ public class DoctorController : ControllerBase
             if (!string.IsNullOrWhiteSpace(doctorDto.PhotoUrl) && System.IO.File.Exists(doctorDto.PhotoUrl))
                 photoStream = System.IO.File.OpenRead(filePath);
 
-            await _doctorService.UpdateWithPhotoAsync(id, doctorDto, photoStream,
+            await doctorService.UpdateWithPhotoAsync(id, doctorDto, photoStream,
                 photoStream != null ? Path.GetFileName(filePath) : null);
 
             return Ok(new { message = "Doctor updated successfully", photoUrl = doctorDto.PhotoUrl });
@@ -102,7 +95,7 @@ public class DoctorController : ControllerBase
     {
         try
         {
-            await _doctorService.SoftDeleteAsync(id);
+            await doctorService.SoftDeleteAsync(id);
             return NoContent();
         }
         catch (Exception ex)

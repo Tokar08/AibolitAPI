@@ -1,26 +1,19 @@
 ﻿using AibolitAPI.DTOs;
-using AibolitAPI.Services;
+using AibolitAPI.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AibolitAPI.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class MedicalRecordController : ControllerBase
+public class MedicalRecordController(IMedicalRecordService medicalRecordService) : ControllerBase
 {
-    private readonly MedicalRecordService _medicalRecordService;
-
-    public MedicalRecordController(MedicalRecordService medicalRecordService)
-    {
-        _medicalRecordService = medicalRecordService;
-    }
-
     [HttpGet]
     public async Task<ActionResult<IEnumerable<MedicalRecordDTO>>> GetAllAsync(int page = 1, int size = 10)
     {
         try
         {
-            var medicalRecords = await _medicalRecordService.GetAllAsync(page, size);
+            var medicalRecords = await medicalRecordService.GetAllAsync(page, size);
             return Ok(medicalRecords);
         }
         catch (Exception ex)
@@ -34,7 +27,7 @@ public class MedicalRecordController : ControllerBase
     {
         try
         {
-            var medicalRecord = await _medicalRecordService.GetByIdAsync(id);
+            var medicalRecord = await medicalRecordService.GetByIdAsync(id);
             if (medicalRecord == null)
                 return NotFound();
             return Ok(medicalRecord);
@@ -50,7 +43,7 @@ public class MedicalRecordController : ControllerBase
     {
         try
         {
-            await _medicalRecordService.CreateAsync(medicalRecordDto);
+            await medicalRecordService.CreateAsync(medicalRecordDto);
             return Created($"api/MedicalRecord/{medicalRecordDto.Id}", medicalRecordDto);
         }
         catch (Exception ex)
@@ -66,7 +59,7 @@ public class MedicalRecordController : ControllerBase
         {
             if (id != medicalRecordDto.Id) return BadRequest(new { message = "ID mismatch" });
 
-            await _medicalRecordService.UpdateAsync(medicalRecordDto);
+            await medicalRecordService.UpdateAsync(medicalRecordDto);
             return NoContent();
         }
         catch (Exception ex)
@@ -80,7 +73,7 @@ public class MedicalRecordController : ControllerBase
     {
         try
         {
-            await _medicalRecordService.SoftDeleteAsync(id);
+            await medicalRecordService.SoftDeleteAsync(id);
             return NoContent();
         }
         catch (Exception ex)

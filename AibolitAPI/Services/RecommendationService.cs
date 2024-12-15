@@ -2,11 +2,10 @@
 using AibolitAPI.Interfaces;
 using AibolitAPI.Models;
 using AutoMapper;
-using Microsoft.EntityFrameworkCore;
 
 namespace AibolitAPI.Services;
 
-public class RecommendationService
+public class RecommendationService : IRecommendationService
 {
     private readonly ILogger<RecommendationService> _logger;
     private readonly IMapper _mapper;
