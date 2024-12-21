@@ -5,13 +5,25 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AibolitAPI.Repositories;
 
-public class MedicalRecordRepository : IMedicalRecordRepository
+public class MedicalRecordRepository : Repository<MedicalRecord>, IMedicalRecordRepository
 {
     private readonly AibolitDbContext _context;
 
-    public MedicalRecordRepository(AibolitDbContext context)
+    public MedicalRecordRepository(AibolitDbContext context) : base(context)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
+    }
+
+    public async Task<MedicalRecord> GetByPatientIdAsync(Guid patientId)
+    {
+        var medicalRecord = await _context.MedicalRecords
+            .Include(mr => mr.Appointments)
+            .Include(mr => mr.Prescriptions)
+            .Include(mr => mr.Recommendations)
+            .Where(mr => mr.PatientId == patientId && mr.IsActive)
+            .FirstOrDefaultAsync();
+
+        return medicalRecord;
     }
 
     public async Task<IEnumerable<MedicalRecord>> GetAllAsync(int page, int size)

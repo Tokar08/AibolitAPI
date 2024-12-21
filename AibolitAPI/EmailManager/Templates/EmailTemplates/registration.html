@@ -1,11 +1,158 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Document</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #FAFAFA;
+            margin: 0;
+            color: #000D1B;
+        }
+
+        .container {
+            max-width: 650px;
+            width: 100%;
+            padding-left: 60px;
+            padding-right: 60px;
+            padding-top: 20px;
+            padding-bottom: 40px;
+            background-color: #fff;
+            border-radius: 40px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-align: left;
+            border: 2px solid #78B9FF;
+            box-sizing: border-box;
+            overflow: hidden;
+            margin: auto;
+            margin-top: 50px;
+        }
+
+        h1 {
+            font-size: 48px;
+            text-align: left;
+        }
+
+        p {
+            font-size: 18px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            color: #000D1B;
+        }
+
+        .custom-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            color: #000D1B;
+        }
+
+        .custom-list li {
+            position: relative;
+            padding-left: 40px;
+            margin-bottom: 20px;
+            font-size: 18px;
+            line-height: 1.5;
+            border-left: 3px solid #76B9FF;
+            padding-left: 20px;
+            color: #000D1B;
+        }
+
+        .custom-before {
+            content: '';
+            position: absolute;
+            left: -5px;
+            top: 6px;
+            width: 30px;
+            height: 7px;
+            background-color: #76B9FF;
+            border-radius: 5px;
+            transform: rotate(-90deg);
+        }
+
+        .footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 50px;
+            padding-left: 20px;
+            padding-right: 20px;
+            margin-bottom: 20px;
+        }
+
+        .footer p {
+            margin-right: 20px;
+            font-size: 18px;
+            flex: 1;
+            text-align: left;
+            color: #000D1B;
+        }
+
+        .footer img {
+            height: 70px;
+            justify-content: flex-end;
+            border-radius: 15px;
+            margin-left: 100px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                max-width: 95%;
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 24px;
+                word-wrap: break-word;
+            }
+
+            .custom-list li {
+                font-size: 14px;
+            }
+
+            .footer {
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                text-align: left;
+            }
+
+            .footer p {
+                margin-right: 12px;
+                font-size: 14px;
+            }
+
+            .footer img {
+                height: 60px;
+                margin-left: 30px;
+                margin-top: 20px;
+            }
+        }
+
+    </style>
 </head>
 <body>
-<h1>Welcome, {UserName}!</h1>
-<p>Your registration was successful.</p>
+<div class="container">
+    <h1>Ваш акаунт у <span class="aibolit">Aibolit</span> успішно зареєстровано, {UserName}!</h1>
+    <p>Дякуємо, що обрали <span class="aibolit">Aibolit</span>! Ми цінуємо вашу довіру, і наш сервіс створений для того,
+        щоб допомогти вам стежити за своїм здоров'ям. Ми готові підтримати вас на кожному етапі — від запису до лікаря
+        до отримання рекомендацій по вашому здоров'ю. З <span class="aibolit">Aibolit</span> ваші медичні дані будуть
+        завжди під рукою, і ви зможете управляти ними швидко та зручно. Легко записуйтесь на прийом до лікаря, отримуйте
+        доступ до вашої медичної історії та будь-яких документів. Ми також допоможемо вам знайти лікарів, які
+        відповідають вашим вимогам і потребам. Не переживайте — ми з вами!</p>
+    <ul class="custom-list">
+        <li><span class="custom-before"></span>Зручна реєстрація на прийом</li>
+        <li><span class="custom-before"></span>Широкий доступ до спеціалістів</li>
+        <li><span class="custom-before"></span>Управління медичними записами</li>
+        <li><span class="custom-before"></span>Пошук симптомів та хвороб</li>
+    </ul>
+    <div class="footer">
+        <p>Подбайте про своє здоров'я!</p>
+        <img alt="Logo" src="https://storage.googleapis.com/aibolit-bucket/aibolit-logo.jpg">
+    </div>
+</div>
 </body>
 </html>

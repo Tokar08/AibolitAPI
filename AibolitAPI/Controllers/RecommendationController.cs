@@ -22,7 +22,7 @@ public class RecommendationController(IRecommendationService recommendationServi
         }
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:guid}")]
     public async Task<ActionResult<RecommendationDTO>> GetByIdAsync(Guid id)
     {
         try
@@ -38,21 +38,8 @@ public class RecommendationController(IRecommendationService recommendationServi
         }
     }
 
-    [HttpPost]
-    public async Task<ActionResult> CreateAsync([FromBody] RecommendationDTO recommendationDto)
-    {
-        try
-        {
-            await recommendationService.CreateAsync(recommendationDto);
-            return Created($"api/Recommendation/{recommendationDto.Id}", recommendationDto);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-    }
 
-    [HttpPut("{id}")]
+    [HttpPut("{id:guid}")]
     public async Task<ActionResult> UpdateAsync(Guid id, [FromBody] RecommendationDTO recommendationDto)
     {
         try
@@ -68,7 +55,7 @@ public class RecommendationController(IRecommendationService recommendationServi
         }
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:guid}")]
     public async Task<ActionResult> SoftDeleteAsync(Guid id)
     {
         try

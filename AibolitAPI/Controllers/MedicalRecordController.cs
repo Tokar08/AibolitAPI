@@ -22,7 +22,7 @@ public class MedicalRecordController(IMedicalRecordService medicalRecordService)
         }
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:guid}")]
     public async Task<ActionResult<MedicalRecordDTO>> GetByIdAsync(Guid id)
     {
         try
@@ -52,7 +52,7 @@ public class MedicalRecordController(IMedicalRecordService medicalRecordService)
         }
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("{id:guid}")]
     public async Task<ActionResult> UpdateAsync(Guid id, [FromBody] MedicalRecordDTO medicalRecordDto)
     {
         try
@@ -68,7 +68,7 @@ public class MedicalRecordController(IMedicalRecordService medicalRecordService)
         }
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:guid}")]
     public async Task<ActionResult> SoftDeleteAsync(Guid id)
     {
         try

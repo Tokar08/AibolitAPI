@@ -21,17 +21,17 @@ public class EmailSender : INotificationSender
         if (string.IsNullOrEmpty(recipient))
             throw new ArgumentException("Recipient email cannot be null or empty.", nameof(recipient));
 
-        if (template == null)
-            throw new ArgumentNullException(nameof(template));
-
-        if (model == null)
-            throw new ArgumentNullException(nameof(model));
+        ArgumentNullException.ThrowIfNull(template);
+        ArgumentNullException.ThrowIfNull(model);
 
         var subject = template.Subject;
-        var body = template.GetBody(model);
+        string body;
 
-        var message = CreateMessage(recipient, subject, body);
+        body = template.GetBody(model);
+        var inlinedBody = PreMailer.Net.PreMailer.MoveCssInline(body);
 
+        var message = CreateMessage(recipient, subject, inlinedBody.Html);
+        Console.WriteLine(string.Join(" ", inlinedBody.Warnings));
         using var client = new SmtpClient();
         try
         {
@@ -45,6 +45,7 @@ public class EmailSender : INotificationSender
                 await client.DisconnectAsync(true);
         }
     }
+
 
     private MimeMessage CreateMessage(string recipient, string subject, string body)
     {

@@ -22,7 +22,7 @@ public class UserController(IUserService userService) : ControllerBase
         }
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:guid}")]
     public async Task<ActionResult<UserDTO>> GetByIdAsync(Guid id)
     {
         try
@@ -51,7 +51,7 @@ public class UserController(IUserService userService) : ControllerBase
         }
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("{id:guid}")]
     public async Task<ActionResult> UpdateAsync(Guid id, [FromBody] UserDTO userDto)
     {
         try
@@ -67,7 +67,7 @@ public class UserController(IUserService userService) : ControllerBase
         }
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:guid}")]
     public async Task<ActionResult> SoftDeleteAsync(Guid id)
     {
         try

@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "0qNMnO/jyVD2rzECl/CQAtG/YpLUT5NtZV3nqO8YN7txR4kBNF2iJRFkzo88TVMTFNgORgjQ++89Z91RcMfJXA==",
+  "dgSpecHash": "dpp7gzOlb5AsibhXSUqZ1sCQbt42Z5bTbwPFnLri7CfA0QQwCKVDeb16vL3RJZB1hLpciV8+1X4fwVbThiq90w==",
   "success": true,
   "projectFilePath": "C:\\Users\\kagu_rhick\\source\\ASP.NET_HW\\AibolitAPI\\AibolitAPI\\AibolitAPI.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\kagu_rhick\\.nuget\\packages\\anglesharp\\1.1.0\\anglesharp.1.1.0.nupkg.sha512",
     "C:\\Users\\kagu_rhick\\.nuget\\packages\\automapper\\12.0.0\\automapper.12.0.0.nupkg.sha512",
     "C:\\Users\\kagu_rhick\\.nuget\\packages\\automapper.extensions.microsoft.dependencyinjection\\12.0.0\\automapper.extensions.microsoft.dependencyinjection.12.0.0.nupkg.sha512",
     "C:\\Users\\kagu_rhick\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",
@@ -69,6 +70,7 @@
     "C:\\Users\\kagu_rhick\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512",
     "C:\\Users\\kagu_rhick\\.nuget\\packages\\npgsql\\8.0.3\\npgsql.8.0.3.nupkg.sha512",
     "C:\\Users\\kagu_rhick\\.nuget\\packages\\npgsql.entityframeworkcore.postgresql\\8.0.4\\npgsql.entityframeworkcore.postgresql.8.0.4.nupkg.sha512",
+    "C:\\Users\\kagu_rhick\\.nuget\\packages\\premailer.net\\2.6.0\\premailer.net.2.6.0.nupkg.sha512",
     "C:\\Users\\kagu_rhick\\.nuget\\packages\\restsharp\\112.1.0\\restsharp.112.1.0.nupkg.sha512",
     "C:\\Users\\kagu_rhick\\.nuget\\packages\\serilog\\4.1.0\\serilog.4.1.0.nupkg.sha512",
     "C:\\Users\\kagu_rhick\\.nuget\\packages\\serilog.extensions.logging\\8.0.0\\serilog.extensions.logging.8.0.0.nupkg.sha512",
@@ -94,7 +96,7 @@
     "C:\\Users\\kagu_rhick\\.nuget\\packages\\system.reflection.metadata\\6.0.1\\system.reflection.metadata.6.0.1.nupkg.sha512",
     "C:\\Users\\kagu_rhick\\.nuget\\packages\\system.runtime.compilerservices.unsafe\\6.0.0\\system.runtime.compilerservices.unsafe.6.0.0.nupkg.sha512",
     "C:\\Users\\kagu_rhick\\.nuget\\packages\\system.security.cryptography.pkcs\\8.0.0\\system.security.cryptography.pkcs.8.0.0.nupkg.sha512",
-    "C:\\Users\\kagu_rhick\\.nuget\\packages\\system.text.encoding.codepages\\6.0.0\\system.text.encoding.codepages.6.0.0.nupkg.sha512",
+    "C:\\Users\\kagu_rhick\\.nuget\\packages\\system.text.encoding.codepages\\8.0.0\\system.text.encoding.codepages.8.0.0.nupkg.sha512",
     "C:\\Users\\kagu_rhick\\.nuget\\packages\\system.text.encodings.web\\8.0.0\\system.text.encodings.web.8.0.0.nupkg.sha512",
     "C:\\Users\\kagu_rhick\\.nuget\\packages\\system.text.json\\8.0.4\\system.text.json.8.0.4.nupkg.sha512",
     "C:\\Users\\kagu_rhick\\.nuget\\packages\\system.threading.channels\\6.0.0\\system.threading.channels.6.0.0.nupkg.sha512"

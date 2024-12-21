@@ -2,4 +2,7 @@
 
 namespace AibolitAPI.Interfaces;
 
-public interface IMedicalRecordRepository : IRepository<MedicalRecord>;
+public interface IMedicalRecordRepository : IRepository<MedicalRecord>
+{
+    Task<MedicalRecord> GetByPatientIdAsync(Guid patientId);
+}

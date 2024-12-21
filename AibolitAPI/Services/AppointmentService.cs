@@ -2,21 +2,31 @@
 using AibolitAPI.Interfaces;
 using AibolitAPI.Models;
 using AutoMapper;
+using Newtonsoft.Json;
 
 namespace AibolitAPI.Services;
 
 public class AppointmentService : IAppointmentService
 {
     private readonly IAppointmentRepository _appointmentRepository;
+    private readonly IDoctorService _doctorService;
     private readonly ILogger<AppointmentService> _logger;
     private readonly IMapper _mapper;
+    private readonly INotificationSender _notificationSender;
+    private readonly IPatientService _patientService;
+    private readonly IEmailTemplateFactory _templateFactory;
 
     public AppointmentService(IAppointmentRepository appointmentRepository, IMapper mapper,
-        ILogger<AppointmentService> logger)
+        ILogger<AppointmentService> logger, IPatientService patientService, INotificationSender notificationSender,
+        IEmailTemplateFactory templateFactory, IDoctorService doctorService)
     {
         _appointmentRepository = appointmentRepository;
         _mapper = mapper;
         _logger = logger;
+        _patientService = patientService;
+        _notificationSender = notificationSender;
+        _templateFactory = templateFactory;
+        _doctorService = doctorService;
     }
 
     public async Task<IEnumerable<AppointmentDTO>> GetAllAsync(int page, int size)
@@ -54,6 +64,24 @@ public class AppointmentService : IAppointmentService
     {
         try
         {
+            var patientJson = await _patientService.GetByIdAsync(appointmentDto.PatientId);
+            var patient = JsonConvert.DeserializeObject<PatientDTO>(patientJson);
+
+            var doctorJson = await _doctorService.GetByIdAsync(appointmentDto.DoctorId);
+            var doctor = JsonConvert.DeserializeObject<DoctorDTO>(doctorJson);
+
+            var template = _templateFactory.GetTemplate("appointment_confirmation");
+            await _notificationSender.SendAsync(
+                patient.Email,
+                template,
+                new object[]
+                {
+                    patient.FirstName, doctor.FirstName + " " + doctor.LastName,
+                    appointmentDto.AppointmentDate.ToString("dd.MM.yyyy HH:mm"),
+                    doctor.Email, doctor.PhoneNumber
+                }
+            );
+
             var appointment = _mapper.Map<Appointment>(appointmentDto);
             await _appointmentRepository.CreateAsync(appointment);
         }

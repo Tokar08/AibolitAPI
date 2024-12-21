@@ -48,6 +48,9 @@ builder.Services.AddScoped<IAdministratorService, AdministratorService>();
 
 builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
+builder.Services.AddHostedService<AppointmentReminderService>();
+builder.Services.AddHostedService<AppointmentSuccessCheckService>();
+
 
 builder.Services.AddScoped<IDoctorRepository, DoctorRepository>();
 builder.Services.AddScoped<IDoctorService, DoctorService>();

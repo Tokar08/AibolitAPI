@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AibolitAPI.Repositories;
 
-public class AdministratorRepository : IAdministratorRepository
+public class AdministratorRepository : Repository<Administrator>, IAdministratorRepository
 {
     private readonly AibolitDbContext _context;
 
-    public AdministratorRepository(AibolitDbContext context)
+    public AdministratorRepository(AibolitDbContext context) : base(context)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
     }

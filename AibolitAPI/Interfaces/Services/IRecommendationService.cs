@@ -6,7 +6,7 @@ public interface IRecommendationService
 {
     Task<IEnumerable<RecommendationDTO>> GetAllAsync(int page, int size);
     Task<RecommendationDTO> GetByIdAsync(Guid id);
-    Task CreateAsync(RecommendationDTO recommendationDto);
+    Task CreateAsync(Guid doctorId, Guid patientId, RecommendationDTO recommendationDto);
     Task UpdateAsync(RecommendationDTO recommendationDto);
     Task SoftDeleteAsync(Guid id);
 }

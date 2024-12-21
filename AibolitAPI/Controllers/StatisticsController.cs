@@ -5,6 +5,7 @@ namespace AibolitAPI.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+//[AuthorizeRole("ChiefDoctor")]
 public class StatisticsController(IStatisticsService statisticsService) : ControllerBase
 {
     [HttpGet]

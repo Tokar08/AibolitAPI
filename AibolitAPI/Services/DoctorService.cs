@@ -5,77 +5,244 @@ using AutoMapper;
 
 namespace AibolitAPI.Services;
 
-public class DoctorService : IDoctorService
+public class DoctorService(
+    IDoctorRepository doctorRepository,
+    IPatientRepository patientRepository,
+    IMapper mapper,
+    ILogger<DoctorService> logger,
+    IKeycloakService keycloakService,
+    IMedicalRecordRepository medicalRecordRepository,
+    IRecommendationRepository recommendationRepository,
+    IPrescriptionRepository prescriptionRepository,
+    IAppointmentRepository appointmentRepository,
+    INotificationSender notificationSender,
+    IEmailTemplateFactory templateFactory)
+    : IDoctorService
 {
-    private readonly IDoctorRepository _doctorRepository;
-    private readonly IKeycloakService _keycloakService;
-    private readonly ILogger<DoctorService> _logger;
-    private readonly IMapper _mapper;
-    private readonly IPatientRepository _patientRepository;
-
-    public DoctorService(IDoctorRepository doctorRepository, IPatientRepository patientRepository, IMapper mapper,
-        ILogger<DoctorService> logger,
-        IKeycloakService keycloakService)
-    {
-        _doctorRepository = doctorRepository;
-        _patientRepository = patientRepository;
-        _mapper = mapper;
-        _logger = logger;
-        _keycloakService = keycloakService;
-    }
-
     public async Task<IEnumerable<DoctorDTO>> GetAllAsync(int page, int size)
     {
         try
         {
-            var doctors = await _doctorRepository.GetAllAsync(page, size);
-            return _mapper.Map<IEnumerable<DoctorDTO>>(doctors);
+            var doctors = await doctorRepository.GetAllAsync(page, size);
+            return mapper.Map<IEnumerable<DoctorDTO>>(doctors);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error occurred while getting all doctors.");
+            logger.LogError(ex, "Error occurred while getting all doctors.");
             throw;
         }
     }
 
     public async Task<string> GetAllDoctorsWithSSOAsync(int page, int size)
     {
-        var dbDoctors = await _doctorRepository.GetAllAsync(page, size);
-        var doctorEntities = await _keycloakService.GetEntitiesWithSSOAsync<DoctorDTO, Doctor>(
+        var dbDoctors = await doctorRepository.GetAllAsync(page, size);
+        var doctorEntities = await keycloakService.GetEntitiesWithSSOAsync<DoctorDTO, Doctor>(
             dbDoctors,
             doctor => doctor.User.KeycloakId.ToString()
         );
 
-        await Task.WhenAll(doctorEntities.Select(doctor => UpdatePatientsForDoctor(doctor, page, size)));
+        foreach (var doctor in doctorEntities) await UpdatePatientsForDoctor(doctor, page, size);
 
-        return _keycloakService.Serialize(doctorEntities);
+        return keycloakService.Serialize(doctorEntities.Where(d => d.IsActive));
     }
 
     public async Task<string> GetByIdAsync(Guid id)
     {
         try
         {
-            var dbDoctor = await _doctorRepository.GetByIdAsync(id);
+            var dbDoctor = await doctorRepository.GetByIdAsync(id);
             if (dbDoctor == null)
             {
-                _logger.LogWarning($"Doctor with ID: {id} was not found.");
+                logger.LogWarning($"Doctor with ID: {id} was not found.");
                 throw new KeyNotFoundException($"Doctor with ID: {id} was not found.");
             }
 
-            var doctorWithSSO = await _keycloakService.GetEntityWithSSOAsync<DoctorDTO, Doctor>(
+            var doctorWithSSO = await keycloakService.GetEntityWithSSOAsync<DoctorDTO, Doctor>(
                 dbDoctor,
                 doctor => doctor.User.KeycloakId.ToString()
             );
 
             await UpdatePatientsForDoctor(doctorWithSSO, 1, int.MaxValue);
 
-            return _keycloakService.Serialize(doctorWithSSO);
+            return keycloakService.Serialize(doctorWithSSO);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Error occurred while getting doctor with ID: {id}");
+            logger.LogError(ex, $"Error occurred while getting doctor with ID: {id}");
             throw new Exception($"Error occurred while processing doctor with ID: {id}", ex);
         }
+    }
+
+    public async Task<string> GetPatientsForDoctorAsync(Guid doctorId, int page, int size)
+    {
+        var doctor = await doctorRepository.GetByIdAsync(doctorId);
+        if (doctor == null)
+            throw new KeyNotFoundException($"Doctor with ID: {doctorId} not found.");
+
+
+        var patients = doctor.Patients.Where(p => p.Doctors.Any(d => d.Id == doctorId)).Skip((page - 1) * size)
+            .Take(size).ToList();
+
+        var patientEntities = await keycloakService.GetEntitiesWithSSOAsync<PatientDTO, Patient>(
+            patients,
+            patient => patient.User.KeycloakId.ToString()
+        );
+
+        var patientDTOs = patientEntities.ToList();
+
+        return keycloakService.Serialize(patientDTOs);
+    }
+
+    public async Task<string> GetPatientByIdAsync(Guid doctorId, Guid patientId)
+    {
+        var doctor = await doctorRepository.GetByIdAsync(doctorId);
+        if (doctor == null)
+            throw new KeyNotFoundException($"Doctor with ID: {doctorId} not found.");
+
+        var patient = await patientRepository.GetByIdAsync(patientId);
+        if (patient == null || patient.Doctors.All(d => d.Id != doctorId))
+            throw new KeyNotFoundException(
+                $"Patient with ID: {patientId} is not assigned to Doctor with ID: {doctorId}.");
+
+        var patientEntity =
+            await keycloakService.GetEntityWithSSOAsync<PatientDTO, Patient>(patient,
+                p => p.User.KeycloakId.ToString());
+        return keycloakService.Serialize(patientEntity);
+    }
+
+    public async Task<string> GetPrescriptionsForPatientAsync(Guid doctorId, Guid patientId)
+    {
+        var medicalRecord = await medicalRecordRepository.GetByPatientIdAsync(patientId);
+
+        if (medicalRecord == null)
+            throw new KeyNotFoundException("Prescriptions not found for this patient and doctor.");
+
+        var prescriptions = medicalRecord.Prescriptions.Where(p => p.IsActive).ToList();
+        return keycloakService.Serialize(prescriptions);
+    }
+
+    public async Task<string> GetRecommendationsForPatientAsync(Guid doctorId, Guid patientId)
+    {
+        var medicalRecord = await medicalRecordRepository.GetByPatientIdAsync(patientId);
+
+        if (medicalRecord == null)
+            throw new KeyNotFoundException("Recommendations not found for this patient and doctor.");
+
+        var recommendations = medicalRecord.Recommendations.Where(r => r.IsActive).ToList();
+        return keycloakService.Serialize(recommendations);
+    }
+
+    public async Task<object> GetPatientPrescriptionByIdAsync(Guid doctorId, Guid patientId, Guid prescriptionId)
+    {
+        var prescription = await prescriptionRepository.GetByIdAsync(prescriptionId);
+
+        if (prescription == null || !prescription.IsActive)
+            throw new KeyNotFoundException($"Prescription with ID: {prescriptionId} not found or inactive.");
+
+        var medicalRecord = await medicalRecordRepository.GetByIdAsync(prescription.MedicalRecordId);
+
+        if (medicalRecord == null || medicalRecord.PatientId != patientId)
+            throw new UnauthorizedAccessException(
+                "This prescription does not belong to the specified patient or doctor.");
+
+        var doctor = await doctorRepository.GetByIdAsync(doctorId);
+        if (doctor == null)
+            throw new KeyNotFoundException($"Doctor with ID: {doctorId} not found.");
+
+        var doctorDto = await keycloakService.GetEntityWithSSOAsync<DoctorDTO, Doctor>(
+            doctor,
+            d => d.User.KeycloakId.ToString()
+        );
+
+        return new
+        {
+            PrescriptionId = prescription.Id,
+            prescription.PatientId,
+            prescription.DoctorId,
+            prescription.MedicalRecordId,
+            prescription.MedicationName,
+            prescription.Dosage,
+            prescription.Instructions,
+            prescription.PrescriptionDate,
+            prescription.IsActive,
+            DoctorName = $"{doctorDto.FirstName} {doctorDto.LastName}"
+        };
+    }
+
+    public async Task<object> GetPatientRecommendationByIdAsync(Guid doctorId, Guid patientId, Guid recommendationId)
+    {
+        var recommendation = await recommendationRepository.GetByIdAsync(recommendationId);
+
+        if (recommendation == null || !recommendation.IsActive)
+            throw new KeyNotFoundException($"Recommendation with ID: {recommendationId} not found or inactive.");
+
+        var medicalRecord = await medicalRecordRepository.GetByIdAsync(recommendation.MedicalRecordId);
+
+        if (medicalRecord == null || medicalRecord.PatientId != patientId)
+            throw new UnauthorizedAccessException(
+                "This recommendation does not belong to the specified patient or doctor.");
+
+        var doctor = await doctorRepository.GetByIdAsync(doctorId);
+        if (doctor == null)
+            throw new KeyNotFoundException($"Doctor with ID: {doctorId} not found.");
+
+        var doctorDto = await keycloakService.GetEntityWithSSOAsync<DoctorDTO, Doctor>(
+            doctor,
+            d => d.User.KeycloakId.ToString()
+        );
+
+        return new
+        {
+            RecommendationId = recommendation.Id,
+            recommendation.PatientId,
+            recommendation.DoctorId,
+            recommendation.MedicalRecordId,
+            recommendation.Content,
+            recommendation.RecommendationDate,
+            recommendation.IsActive,
+            DoctorName = $"{doctorDto.FirstName} {doctorDto.LastName}"
+        };
+    }
+
+    public async Task<IEnumerable<AppointmentDTO>> GetScheduledAppointmentsByDoctorIdAsync(Guid doctorId)
+    {
+        var appointments = await appointmentRepository.GetAppointmentsByDoctorIdAsync(doctorId);
+
+        var scheduledAppointments = appointments
+            .Where(a => a.IsScheduled)
+            .OrderBy(a => a.AppointmentDate)
+            .ToList();
+
+        return mapper.Map<IEnumerable<AppointmentDTO>>(scheduledAppointments);
+    }
+
+    public async Task CancelAppointmentAsync(Guid doctorId, Guid appointmentId)
+    {
+        var appointment = await appointmentRepository.GetByIdAsync(appointmentId);
+
+        if (appointment == null)
+            throw new KeyNotFoundException($"Appointment with ID {appointmentId} not found.");
+
+        if (appointment.DoctorId != doctorId)
+            throw new UnauthorizedAccessException("Appointment does not belong to this doctor.");
+
+        if (!appointment.IsScheduled)
+            throw new InvalidOperationException("Appointment is not scheduled or already cancelled.");
+
+        await appointmentRepository.CancelAppointmentAsync(appointmentId);
+
+        var doctor = await keycloakService.GetEntityWithSSOAsync<DoctorDTO, Doctor>(
+            appointment.Doctor,
+            d => d.User.KeycloakId
+        );
+
+        var patient = await keycloakService.GetEntityWithSSOAsync<PatientDTO, Patient>(
+            appointment.Patient,
+            p => p.User.KeycloakId
+        );
+
+
+        await SendCancellationNotificationAsync(doctor, patient, appointment);
     }
 
 
@@ -83,20 +250,20 @@ public class DoctorService : IDoctorService
     {
         try
         {
-            var doctor = _mapper.Map<Doctor>(doctorDto);
+            var doctor = mapper.Map<Doctor>(doctorDto);
 
             if (photoStream != null && !string.IsNullOrWhiteSpace(fileName))
             {
-                var uploadedPhotoUrl = await _doctorRepository.UploadPhotoAsync(photoStream, fileName);
+                var uploadedPhotoUrl = await doctorRepository.UploadPhotoAsync(photoStream, fileName);
                 doctor.PhotoUrl = uploadedPhotoUrl;
             }
 
-            await _doctorRepository.CreateAsync(doctor);
+            await doctorRepository.CreateAsync(doctor);
             return doctor.PhotoUrl;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error occurred while creating doctor.");
+            logger.LogError(ex, "Error occurred while creating doctor.");
             throw;
         }
     }
@@ -105,21 +272,21 @@ public class DoctorService : IDoctorService
     {
         try
         {
-            var existingDoctor = await _doctorRepository.GetByIdAsync(id);
+            var existingDoctor = await doctorRepository.GetByIdAsync(id);
             if (existingDoctor == null)
                 throw new KeyNotFoundException($"Doctor with ID {id} not found.");
 
             var oldPhotoUrl = existingDoctor.PhotoUrl;
-            _mapper.Map(doctorDto, existingDoctor);
+            mapper.Map(doctorDto, existingDoctor);
 
             if (photoStream != null && !string.IsNullOrWhiteSpace(fileName))
             {
                 if (!oldPhotoUrl.Contains(fileName))
                 {
                     if (!string.IsNullOrWhiteSpace(oldPhotoUrl))
-                        await _doctorRepository.DeletePhotoAsync(oldPhotoUrl);
+                        await doctorRepository.DeletePhotoAsync(oldPhotoUrl);
 
-                    var uploadedPhotoUrl = await _doctorRepository.UploadPhotoAsync(photoStream, fileName);
+                    var uploadedPhotoUrl = await doctorRepository.UploadPhotoAsync(photoStream, fileName);
                     existingDoctor.PhotoUrl = uploadedPhotoUrl;
                 }
             }
@@ -128,12 +295,12 @@ public class DoctorService : IDoctorService
                 existingDoctor.PhotoUrl = oldPhotoUrl;
             }
 
-            await _doctorRepository.UpdateAsync(existingDoctor);
+            await doctorRepository.UpdateAsync(existingDoctor);
             return existingDoctor.PhotoUrl;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Error occurred while updating doctor with ID: {id}");
+            logger.LogError(ex, $"Error occurred while updating doctor with ID: {id}");
             throw;
         }
     }
@@ -143,25 +310,47 @@ public class DoctorService : IDoctorService
     {
         try
         {
-            var doctor = await _doctorRepository.GetByIdAsync(id);
+            var doctor = await doctorRepository.GetByIdAsync(id);
             if (doctor != null && !string.IsNullOrWhiteSpace(doctor.PhotoUrl))
-                await _doctorRepository.DeletePhotoAsync(doctor.PhotoUrl);
+                await doctorRepository.DeletePhotoAsync(doctor.PhotoUrl);
 
-            await _doctorRepository.SoftDeleteAsync(id);
+            await doctorRepository.SoftDeleteAsync(id);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Error occurred while soft deleting doctor with ID: {id}");
+            logger.LogError(ex, $"Error occurred while soft deleting doctor with ID: {id}");
             throw;
         }
     }
+
+    private async Task SendCancellationNotificationAsync(DoctorDTO doctor, PatientDTO patient, Appointment appointment)
+    {
+        var template = templateFactory.GetTemplate("appointment_cancellation");
+
+        var patientEmailTask = notificationSender.SendAsync(patient.Email, template, new object[]
+        {
+            appointment.AppointmentDate.ToString("f"),
+            $"{doctor.FirstName} {doctor.LastName}",
+            $"{patient.FirstName} {patient.LastName}"
+        });
+
+        var doctorEmailTask = notificationSender.SendAsync(doctor.Email, template, new object[]
+        {
+            appointment.AppointmentDate.ToString("f"),
+            $"{doctor.FirstName} {doctor.LastName}",
+            $"{patient.FirstName} {patient.LastName}"
+        });
+
+        await Task.WhenAll(patientEmailTask, doctorEmailTask);
+    }
+
 
     private async Task UpdatePatientsForDoctor(DoctorDTO doctor, int page, int size)
     {
         if (doctor.Patients != null && doctor.Patients.Count > 0)
         {
-            var dbPatients = await _patientRepository.GetAllAsync(page, size);
-            var patientEntities = await _keycloakService.GetEntitiesWithSSOAsync<PatientDTO, Patient>(
+            var dbPatients = await patientRepository.GetAllAsync(page, size);
+            var patientEntities = await keycloakService.GetEntitiesWithSSOAsync<PatientDTO, Patient>(
                 dbPatients,
                 patient => patient.User.KeycloakId.ToString()
             );

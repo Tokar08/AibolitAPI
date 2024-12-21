@@ -51,49 +51,62 @@ public class UserService : IUserService
                     "Некоректна дата народження або дата народження не може бути у майбутньому.");
 
 
-            var newUser = new User
+            await _userRepository.BeginTransactionAsync();
+            try
             {
-                Id = Guid.NewGuid(),
-                KeycloakId = keycloakId,
-                RoleId = defaultRole.Id,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
+                var newUserId = Guid.NewGuid();
+                var newPatientId = Guid.NewGuid();
+                var newMedicalRecordId = Guid.NewGuid();
 
-            await _userRepository.CreateAsync(newUser);
+                var newUser = new User
+                {
+                    Id = newUserId,
+                    KeycloakId = keycloakId,
+                    RoleId = defaultRole.Id,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
 
-            var medicalRecord = new MedicalRecord
+                await _userRepository.CreateAsync(newUser);
+
+                var newPatient = new Patient
+                {
+                    Id = newPatientId,
+                    UserId = newUser.Id,
+                    MedicalRecordId = newMedicalRecordId,
+                    IsActive = true
+                };
+
+                var medicalRecord = new MedicalRecord
+                {
+                    Id = newMedicalRecordId,
+                    PatientId = newPatient.Id,
+                    RecordDate = DateTime.UtcNow,
+                    IsActive = true,
+                    Appointments = new List<Appointment>(),
+                    Prescriptions = new List<Prescription>(),
+                    Recommendations = new List<Recommendation>()
+                };
+
+                _dbContext.MedicalRecords.Add(medicalRecord);
+                _dbContext.Patients.Add(newPatient);
+
+                await _dbContext.SaveChangesAsync();
+                await _userRepository.CommitTransactionAsync();
+
+                var template = _templateFactory.GetTemplate("registration");
+                await _notificationSender.SendAsync(email, template, new object[] { userName });
+
+                return _mapper.Map<UserDTO>(newUser);
+            }
+            catch
             {
-                Id = Guid.NewGuid(),
-                PatientId = newUser.Id,
-                RecordDate = DateTime.UtcNow,
-                IsActive = true,
-                Appointments = new List<Appointment>(),
-                Prescriptions = new List<Prescription>(),
-                Recommendations = new List<Recommendation>()
-            };
-
-            _dbContext.MedicalRecords.Add(medicalRecord);
-            await _dbContext.SaveChangesAsync();
-
-            var newPatient = new Patient
-            {
-                Id = Guid.NewGuid(),
-                UserId = newUser.Id,
-                MedicalRecordId = medicalRecord.Id,
-                IsActive = true
-            };
-
-            _dbContext.Patients.Add(newPatient);
-            await _dbContext.SaveChangesAsync();
-
-            var template = _templateFactory.GetTemplate("registration");
-            await _notificationSender.SendAsync(email, template, userName);
-
-
-            return _mapper.Map<UserDTO>(newUser);
+                await _userRepository.RollbackTransactionAsync();
+                throw;
+            }
         }
+
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while authenticating or registering user.");

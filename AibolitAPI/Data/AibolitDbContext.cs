@@ -157,7 +157,7 @@ public class AibolitDbContext : DbContext
         // Фильтр для отображения только активных записей на прием, при условии,
         // что пациент и доктор также активны
         modelBuilder.Entity<Appointment>()
-            .HasQueryFilter(a => a.IsActive && a.Patient.IsActive && a.Doctor.IsActive);
+            .HasQueryFilter(a => a.IsActive && a.Patient.IsActive);
 
         // Медицинская карта должна быть активной
         modelBuilder.Entity<MedicalRecord>().HasQueryFilter(mr => mr.IsActive);
@@ -166,11 +166,11 @@ public class AibolitDbContext : DbContext
         // Фильтр для активных рецептов, при условии, что пациент активен
         // и врач, выписавший рецепт, является активным пользователем
         modelBuilder.Entity<Prescription>()
-            .HasQueryFilter(p => p.IsActive && p.Patient.IsActive && p.PrescribedBy.User.IsActive);
+            .HasQueryFilter(p => p.IsActive && p.Patient.IsActive);
 
         // Рекомендация должна быть активной, а также пациент и врач, выдавший рекомендацию
         modelBuilder.Entity<Recommendation>()
-            .HasQueryFilter(r => r.IsActive && r.Patient.IsActive && r.GivenBy.User.IsActive);
+            .HasQueryFilter(r => r.IsActive && r.Patient.IsActive);
 
         // Фильтр для отображения только активных больниц
         modelBuilder.Entity<Hospital>()

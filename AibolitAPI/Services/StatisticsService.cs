@@ -29,7 +29,7 @@ public class StatisticsService : IStatisticsService
 
         if (hospital == null) throw new Exception("Hospital not found!");
 
-        var doctors = hospital.Doctors;
+        var doctors = hospital.Doctors.Where(d => d.IsActive);
         var patients = JsonConvert.DeserializeObject<List<PatientDTO>>(patientsJson)
             .Where(p => p.Doctors.Any(d => d.HospitalId == hospitalId))
             .ToList();
@@ -41,7 +41,7 @@ public class StatisticsService : IStatisticsService
         var doctorVisitRatings = GetDoctorVisitRatings(doctors);
         var doctorLikeRatings = GetDoctorLikeRatings(doctors);
         var totalStaff = GetTotalStaff(hospital);
-        var totalDoctors = doctors.Count;
+        var totalDoctors = doctors.Count();
         var totalPatients = patients.Count;
         var totalAdministrators = hospital.Administrators?.Count ?? 0;
 
@@ -85,6 +85,7 @@ public class StatisticsService : IStatisticsService
             .ToDictionary(g => g.Key, g => g.Count());
 
         var totalPeople = people.Count();
+        if (totalPeople == 0) return new Dictionary<string, double>();
         return genderCounts.ToDictionary(g => g.Key, g => Math.Round((double)g.Value / totalPeople * 100, 2));
     }
 
@@ -125,7 +126,7 @@ public class StatisticsService : IStatisticsService
     private static int GetTotalStaff(HospitalDTO hospital)
     {
         var totalAdministrators = hospital.Administrators?.Count ?? 0;
-        var totalDoctors = hospital.Doctors.Count;
+        var totalDoctors = hospital.Doctors.Count(d => d.IsActive);
         return totalDoctors + totalAdministrators;
     }
 
@@ -159,8 +160,13 @@ public class StatisticsService : IStatisticsService
     private static double GetCancellationRate(IEnumerable<AppointmentDTO> appointments, IEnumerable<DoctorDTO> doctors)
     {
         var cancelledAppointments = appointments.Count(a => !a.IsScheduled && doctors.Any(d => d.Id == a.DoctorId));
-        return Math.Round((double)cancelledAppointments / appointments.Count() * 100, 2);
+        var totalAppointments = appointments.Count();
+
+        if (totalAppointments == 0) return 0;
+
+        return Math.Round((double)cancelledAppointments / totalAppointments * 100, 2);
     }
+
 
     //NOTE: Определение возрастной группы по дате рождения
     private static string GetAgeGroup(string birthDate)

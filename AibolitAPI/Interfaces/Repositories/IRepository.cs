@@ -8,4 +8,7 @@ public interface IRepository<T> where T : class
     Task CreateAsync(T entity);
     Task UpdateAsync(T entity);
     Task SoftDeleteAsync(Guid id);
+    Task BeginTransactionAsync();
+    Task CommitTransactionAsync();
+    Task RollbackTransactionAsync();
 }

@@ -5,13 +5,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AibolitAPI.Repositories;
 
-public class AppointmentRepository : IAppointmentRepository
+public class AppointmentRepository : Repository<Appointment>,IAppointmentRepository
 {
     private readonly AibolitDbContext _context;
 
-    public AppointmentRepository(AibolitDbContext context)
+    public AppointmentRepository(AibolitDbContext context) : base(context)
     {
-        _context = context ?? throw new ArgumentNullException(nameof(context));
+        _context = context;
     }
 
     public async Task<IEnumerable<Appointment>> GetAllAsync(int page, int size)
@@ -57,6 +57,46 @@ public class AppointmentRepository : IAppointmentRepository
             throw new InvalidOperationException("Appointment not found.");
 
         appointment.IsActive = false;
+        await _context.SaveChangesAsync();
+    }
+    
+    public async Task<List<Appointment>> GetUpcomingAppointmentsAsync()
+    {
+        var now = DateTime.UtcNow;
+
+        return await _context.Appointments
+            .Where(a => a.AppointmentDate >= now)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Appointment>> GetAppointmentsByDoctorIdAsync(Guid doctorId)
+    {
+        var now = DateTime.UtcNow;
+
+        return await _context.Appointments
+            .Where(a => a.DoctorId == doctorId && a.Doctor.IsActive && a.AppointmentDate > now && a.IsScheduled)
+            .OrderBy(a => a.AppointmentDate)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Appointment>> GetAppointmentsByPatientIdAsync(Guid patientId)
+    {
+        return await _context.Set<Appointment>()
+            .Where(a => a.PatientId == patientId)
+            .OrderByDescending(a => a.AppointmentDate)
+            .ToListAsync();
+    }
+
+    public async Task CancelAppointmentAsync(Guid appointmentId)
+    {
+        var appointment = await GetByIdAsync(appointmentId);
+        if (appointment == null)
+            throw new KeyNotFoundException($"Appointment with ID {appointmentId} not found.");
+
+        if (!appointment.IsScheduled)
+            throw new InvalidOperationException("Appointment is not scheduled or already cancelled.");
+
+        appointment.IsScheduled = false;
         await _context.SaveChangesAsync();
     }
 }

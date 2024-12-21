@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AibolitAPI.Repositories;
 
-public class PatientRepository : IPatientRepository
+public class PatientRepository : Repository<Patient>, IPatientRepository
 {
     private readonly AibolitDbContext _context;
 
-    public PatientRepository(AibolitDbContext context)
+    public PatientRepository(AibolitDbContext context) : base(context)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
     }

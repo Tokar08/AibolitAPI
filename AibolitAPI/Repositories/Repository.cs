@@ -1,6 +1,7 @@
 ﻿using AibolitAPI.Data;
 using AibolitAPI.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace AibolitAPI.Repositories;
 
@@ -9,7 +10,8 @@ namespace AibolitAPI.Repositories;
 public class Repository<T> : IRepository<T> where T : class
 {
     protected readonly AibolitDbContext _context;
-    protected readonly DbSet<T> _dbSet;
+    private readonly DbSet<T> _dbSet;
+    private IDbContextTransaction? _currentTransaction;
 
     protected Repository(AibolitDbContext context)
     {
@@ -58,5 +60,30 @@ public class Repository<T> : IRepository<T> where T : class
         var entityWithActiveFlag = entity as dynamic;
         entityWithActiveFlag.IsActive = false;
         await UpdateAsync(entity);
+    }
+
+    public async Task BeginTransactionAsync()
+    {
+        _currentTransaction = await _context.Database.BeginTransactionAsync();
+    }
+
+    public async Task CommitTransactionAsync()
+    {
+        if (_currentTransaction != null)
+        {
+            await _currentTransaction.CommitAsync();
+            await _currentTransaction.DisposeAsync();
+            _currentTransaction = null;
+        }
+    }
+
+    public async Task RollbackTransactionAsync()
+    {
+        if (_currentTransaction != null)
+        {
+            await _currentTransaction.RollbackAsync();
+            await _currentTransaction.DisposeAsync();
+            _currentTransaction = null;
+        }
     }
 }

@@ -100,6 +100,10 @@
               "target": "Package",
               "version": "[8.0.4, )"
             },
+            "PreMailer.Net": {
+              "target": "Package",
+              "version": "[2.6.0, )"
+            },
             "RestSharp": {
               "target": "Package",
               "version": "[112.1.0, )"

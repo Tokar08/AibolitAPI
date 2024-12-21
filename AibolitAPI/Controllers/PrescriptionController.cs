@@ -22,7 +22,7 @@ public class PrescriptionController(IPrescriptionService prescriptionService) : 
         }
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:guid}")]
     public async Task<ActionResult<PrescriptionDTO>> GetByIdAsync(Guid id)
     {
         try
@@ -38,21 +38,8 @@ public class PrescriptionController(IPrescriptionService prescriptionService) : 
         }
     }
 
-    [HttpPost]
-    public async Task<ActionResult> CreateAsync([FromBody] PrescriptionDTO prescriptionDto)
-    {
-        try
-        {
-            await prescriptionService.CreateAsync(prescriptionDto);
-            return Created($"api/Prescription/{prescriptionDto.Id}", prescriptionDto);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-    }
 
-    [HttpPut("{id}")]
+    [HttpPut("{id:guid}")]
     public async Task<ActionResult> UpdateAsync(Guid id, [FromBody] PrescriptionDTO prescriptionDto)
     {
         try
@@ -68,7 +55,7 @@ public class PrescriptionController(IPrescriptionService prescriptionService) : 
         }
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:guid}")]
     public async Task<ActionResult> SoftDeleteAsync(Guid id)
     {
         try

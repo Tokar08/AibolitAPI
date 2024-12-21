@@ -1,5 +1,4 @@
-﻿using AibolitAPI.Attributes;
-using AibolitAPI.DTOs;
+﻿using AibolitAPI.DTOs;
 using AibolitAPI.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,7 +14,11 @@ public class AdministratorController(IAdministratorService administratorService)
         try
         {
             var administrators = await administratorService.GetAllAdministratorWithSSOAsync(page, size);
-            return Ok(administrators);
+            return new ContentResult
+            {
+                Content = administrators,
+                ContentType = "application/json"
+            };
         }
         catch (Exception ex)
         {
@@ -29,9 +32,11 @@ public class AdministratorController(IAdministratorService administratorService)
         try
         {
             var administrator = await administratorService.GetByIdAsync(id);
-            if (administrator == null)
-                return NotFound();
-            return Ok(administrator);
+            return new ContentResult
+            {
+                Content = administrator,
+                ContentType = "application/json"
+            };
         }
         catch (Exception ex)
         {
@@ -53,7 +58,7 @@ public class AdministratorController(IAdministratorService administratorService)
         }
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("{id:guid}")]
     public async Task<ActionResult> UpdateAsync(Guid id, [FromBody] AdministratorDTO administratorDto)
     {
         try
@@ -69,8 +74,7 @@ public class AdministratorController(IAdministratorService administratorService)
         }
     }
 
-    [HttpDelete("{id}")]
-    [AuthorizeRole("Admin")]
+    [HttpDelete("{id:guid}")]
     public async Task<ActionResult> SoftDeleteAsync(Guid id)
     {
         try

@@ -6,7 +6,7 @@ public interface IPrescriptionService
 {
     Task<IEnumerable<PrescriptionDTO>> GetAllAsync(int page, int size);
     Task<PrescriptionDTO> GetByIdAsync(Guid id);
-    Task CreateAsync(PrescriptionDTO prescriptionDto);
+    Task CreateAsync(Guid doctorId, Guid patientId, PrescriptionDTO prescriptionDto);
     Task UpdateAsync(PrescriptionDTO prescriptionDto);
     Task SoftDeleteAsync(Guid id);
 }

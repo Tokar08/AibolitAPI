@@ -14,11 +14,13 @@ public class HospitalService : IHospitalService
     private readonly IKeycloakService _keycloakService;
     private readonly ILogger<HospitalService> _logger;
     private readonly IMapper _mapper;
+    private readonly IMedicalRecordRepository _medicalRecordRepository;
     private readonly IPatientRepository _patientRepository;
 
     public HospitalService(IHospitalRepository hospitalRepository, IMapper mapper, ILogger<HospitalService> logger,
         IAdministratorRepository administratorRepository, IDoctorRepository doctorRepository,
-        IKeycloakService keycloakService, IPatientRepository patientRepository)
+        IKeycloakService keycloakService, IPatientRepository patientRepository,
+        IMedicalRecordRepository medicalRecordRepository)
     {
         _hospitalRepository = hospitalRepository;
         _mapper = mapper;
@@ -27,6 +29,7 @@ public class HospitalService : IHospitalService
         _doctorRepository = doctorRepository;
         _keycloakService = keycloakService;
         _patientRepository = patientRepository;
+        _medicalRecordRepository = medicalRecordRepository;
     }
 
     public async Task<string> GetAllHospitalsWithDetailsAsync(int page, int size)
@@ -37,10 +40,189 @@ public class HospitalService : IHospitalService
             hospital => hospital.Id.ToString()
         );
 
-        await Task.WhenAll(hospitalEntities.Select(hospital =>
-            UpdateDoctorsAndAdminsForHospital(hospital, page, size)));
+        foreach (var hospital in hospitalEntities) await UpdateDoctorsAndAdminsForHospital(hospital, page, size);
 
         return _keycloakService.Serialize(hospitalEntities);
+    }
+
+    public async Task<string> GetDoctorsByHospitalIdAsync(Guid hospitalId, int page, int size)
+    {
+        var dbDoctors = await _doctorRepository.GetAllAsync(page, size, q => q.Where(d => d.HospitalId == hospitalId));
+        var doctorEntities =
+            await _keycloakService.GetEntitiesWithSSOAsync<DoctorDTO, Doctor>(dbDoctors,
+                doctor => doctor.User.KeycloakId.ToString());
+
+        return _keycloakService.Serialize(doctorEntities.Where(d => d.IsActive));
+    }
+
+    public async Task<string> GetDoctorWithPatientsAsync(Guid hospitalId, Guid doctorId, int page, int size)
+    {
+        var doctor = await _doctorRepository.GetByIdAsync(doctorId);
+        if (doctor == null || doctor.HospitalId != hospitalId)
+            throw new KeyNotFoundException($"Doctor with ID: {doctorId} in Hospital with ID: {hospitalId} not found.");
+
+        var doctorEntity =
+            await _keycloakService.GetEntityWithSSOAsync<DoctorDTO, Doctor>(doctor, d => d.User.KeycloakId.ToString());
+        doctorEntity.Patients = await UpdatePatientsForDoctor(doctorEntity, page, size);
+
+        return _keycloakService.Serialize(doctorEntity);
+    }
+
+    public async Task<string> GetPatientsForDoctorAsync(Guid hospitalId, Guid doctorId, int page, int size)
+    {
+        var doctor = await _doctorRepository.GetByIdAsync(doctorId);
+        if (doctor == null || doctor.HospitalId != hospitalId)
+            throw new KeyNotFoundException($"Doctor with ID: {doctorId} in Hospital with ID: {hospitalId} not found.");
+
+
+        var patients = doctor.Patients.Where(p => p.Doctors.Any(d => d.Id == doctorId)).Skip((page - 1) * size)
+            .Take(size).ToList();
+
+        var patientEntities = await _keycloakService.GetEntitiesWithSSOAsync<PatientDTO, Patient>(
+            patients,
+            patient => patient.User.KeycloakId.ToString()
+        );
+
+        var patientDTOs = patientEntities.ToList();
+
+        return _keycloakService.Serialize(patientDTOs);
+    }
+
+
+    public async Task<string> GetPatientInfoAsync(Guid hospitalId, Guid doctorId, Guid patientId)
+    {
+        var doctor = await _doctorRepository.GetByIdAsync(doctorId);
+        if (doctor == null || doctor.HospitalId != hospitalId)
+            throw new KeyNotFoundException($"Doctor with ID: {doctorId} in Hospital with ID: {hospitalId} not found.");
+
+        var patient = await _patientRepository.GetByIdAsync(patientId);
+        if (patient == null || patient.Doctors.All(d => d.Id != doctorId))
+            throw new KeyNotFoundException(
+                $"Patient with ID: {patientId} is not assigned to Doctor with ID: {doctorId}.");
+
+        var patientEntity =
+            await _keycloakService.GetEntityWithSSOAsync<PatientDTO, Patient>(patient,
+                p => p.User.KeycloakId.ToString());
+        return _keycloakService.Serialize(patientEntity);
+    }
+
+    public async Task<IEnumerable<PrescriptionDTO>> GetPatientPrescriptionsAsync(Guid hospitalId, Guid doctorId,
+        Guid patientId)
+    {
+        var doctor = await _doctorRepository.GetByIdAsync(doctorId);
+        if (doctor == null || doctor.HospitalId != hospitalId)
+            throw new KeyNotFoundException($"Doctor with ID: {doctorId} in Hospital with ID: {hospitalId} not found.");
+
+        var patient = await _patientRepository.GetByIdAsync(patientId);
+        if (patient == null || patient.Doctors.All(d => d.Id != doctorId))
+            throw new KeyNotFoundException(
+                $"Patient with ID: {patientId} is not assigned to Doctor with ID: {doctorId}.");
+
+        var medicalRecord = await _medicalRecordRepository.GetByPatientIdAsync(patientId);
+        if (medicalRecord == null)
+            throw new KeyNotFoundException($"Medical record for Patient with ID: {patientId} not found.");
+
+        var prescriptions = medicalRecord.Prescriptions.Where(p => p.IsActive).ToList();
+        return _mapper.Map<IEnumerable<PrescriptionDTO>>(prescriptions);
+    }
+
+    public async Task<IEnumerable<RecommendationDTO>> GetPatientRecommendationsAsync(Guid hospitalId, Guid doctorId,
+        Guid patientId)
+    {
+        var doctor = await _doctorRepository.GetByIdAsync(doctorId);
+        if (doctor == null || doctor.HospitalId != hospitalId)
+            throw new KeyNotFoundException($"Doctor with ID: {doctorId} in Hospital with ID: {hospitalId} not found.");
+
+        var patient = await _patientRepository.GetByIdAsync(patientId);
+        if (patient == null || patient.Doctors.All(d => d.Id != doctorId))
+            throw new KeyNotFoundException(
+                $"Patient with ID: {patientId} is not assigned to Doctor with ID: {doctorId}.");
+
+        var medicalRecord = await _medicalRecordRepository.GetByPatientIdAsync(patientId);
+        if (medicalRecord == null)
+            throw new KeyNotFoundException($"Medical record for Patient with ID: {patientId} not found.");
+
+        var recommendations = medicalRecord.Recommendations.Where(r => r.IsActive).ToList();
+        return _mapper.Map<IEnumerable<RecommendationDTO>>(recommendations);
+    }
+
+
+    public async Task<object> GetPatientRecommendationByIdAsync(Guid hospitalId, Guid doctorId,
+        Guid patientId, Guid recommendationId)
+    {
+        var doctor = await _doctorRepository.GetByIdAsync(doctorId);
+        if (doctor == null || doctor.HospitalId != hospitalId)
+            throw new KeyNotFoundException($"Doctor with ID: {doctorId} in Hospital with ID: {hospitalId} not found.");
+
+        var patient = await _patientRepository.GetByIdAsync(patientId);
+        if (patient == null || patient.Doctors.All(d => d.Id != doctorId))
+            throw new KeyNotFoundException(
+                $"Patient with ID: {patientId} is not assigned to Doctor with ID: {doctorId}.");
+
+        var medicalRecord = await _medicalRecordRepository.GetByPatientIdAsync(patientId);
+        if (medicalRecord == null)
+            throw new KeyNotFoundException($"Medical record for Patient with ID: {patientId} not found.");
+
+        var recommendation = medicalRecord.Recommendations.FirstOrDefault(r => r.Id == recommendationId && r.IsActive);
+        if (recommendation == null)
+            throw new KeyNotFoundException($"Recommendation with ID: {recommendationId} not found.");
+
+        var doctorDto = await _keycloakService.GetEntityWithSSOAsync<DoctorDTO, Doctor>(
+            doctor,
+            d => d.User.KeycloakId.ToString()
+        );
+
+        return new
+        {
+            RecommendationId = recommendation.Id,
+            recommendation.PatientId,
+            recommendation.DoctorId,
+            recommendation.MedicalRecordId,
+            recommendation.Content,
+            recommendation.RecommendationDate,
+            recommendation.IsActive,
+            DoctorName = $"{doctorDto.FirstName} {doctorDto.LastName}"
+        };
+    }
+
+    public async Task<object> GetPatientPrescriptionByIdAsync(Guid hospitalId, Guid doctorId,
+        Guid patientId, Guid prescriptionId)
+    {
+        var doctor = await _doctorRepository.GetByIdAsync(doctorId);
+        if (doctor == null || doctor.HospitalId != hospitalId)
+            throw new KeyNotFoundException($"Doctor with ID: {doctorId} in Hospital with ID: {hospitalId} not found.");
+
+        var patient = await _patientRepository.GetByIdAsync(patientId);
+        if (patient == null || patient.Doctors.All(d => d.Id != doctorId))
+            throw new KeyNotFoundException(
+                $"Patient with ID: {patientId} is not assigned to Doctor with ID: {doctorId}.");
+
+        var medicalRecord = await _medicalRecordRepository.GetByPatientIdAsync(patientId);
+        if (medicalRecord == null)
+            throw new KeyNotFoundException($"Medical record for Patient with ID: {patientId} not found.");
+
+        var prescription = medicalRecord.Prescriptions.FirstOrDefault(p => p.Id == prescriptionId && p.IsActive);
+        if (prescription == null)
+            throw new KeyNotFoundException($"Prescription with ID: {prescriptionId} not found.");
+
+        var doctorDto = await _keycloakService.GetEntityWithSSOAsync<DoctorDTO, Doctor>(
+            doctor,
+            d => d.User.KeycloakId.ToString()
+        );
+
+        return new
+        {
+            PrescriptionId = prescription.Id,
+            prescription.PatientId,
+            prescription.DoctorId,
+            prescription.MedicalRecordId,
+            prescription.MedicationName,
+            prescription.Dosage,
+            prescription.Instructions,
+            prescription.PrescriptionDate,
+            prescription.IsActive,
+            DoctorName = $"{doctorDto.FirstName} {doctorDto.LastName}"
+        };
     }
 
     public async Task<IEnumerable<HospitalDTO>> GetAllAsync(int page, int size)
@@ -88,6 +270,47 @@ public class HospitalService : IHospitalService
         }
     }
 
+    public async Task CreateAsync(HospitalDTO hospitalDto)
+    {
+        try
+        {
+            var hospital = _mapper.Map<Hospital>(hospitalDto);
+            await _hospitalRepository.CreateAsync(hospital);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while creating hospital.");
+            throw;
+        }
+    }
+
+    public async Task UpdateAsync(HospitalDTO hospitalDto)
+    {
+        try
+        {
+            var hospital = _mapper.Map<Hospital>(hospitalDto);
+            await _hospitalRepository.UpdateAsync(hospital);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while updating hospital.");
+            throw;
+        }
+    }
+
+    public async Task SoftDeleteAsync(Guid id)
+    {
+        try
+        {
+            await _hospitalRepository.SoftDeleteAsync(id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error occurred while soft deleting hospital with ID: {id}");
+            throw;
+        }
+    }
+
     private async Task UpdateDoctorsAndAdminsForHospital(HospitalDTO hospital, int page, int size)
     {
         if (hospital.Doctors?.Count > 0)
@@ -98,8 +321,7 @@ public class HospitalService : IHospitalService
                 doctor => doctor.User.KeycloakId.ToString()
             )).ToList();
 
-            await Task.WhenAll(
-                hospital.Doctors.Select(doctor => UpdateDoctorDetails(doctor, doctorEntities, page, size)));
+            foreach (var doctor in hospital.Doctors) await UpdateDoctorDetails(doctor, doctorEntities, page, size);
         }
 
         if (hospital.Administrators?.Count > 0)
@@ -110,7 +332,7 @@ public class HospitalService : IHospitalService
                 admin => admin.User.KeycloakId.ToString()
             )).ToList();
 
-            await Task.WhenAll(hospital.Administrators.Select(admin => UpdateAdminDetails(admin, adminEntities)));
+            foreach (var admin in hospital.Administrators) await UpdateAdminDetails(admin, adminEntities);
         }
     }
 
@@ -170,46 +392,5 @@ public class HospitalService : IHospitalService
         }
 
         return patientDTOs;
-    }
-
-    public async Task CreateAsync(HospitalDTO hospitalDto)
-    {
-        try
-        {
-            var hospital = _mapper.Map<Hospital>(hospitalDto);
-            await _hospitalRepository.CreateAsync(hospital);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error occurred while creating hospital.");
-            throw;
-        }
-    }
-
-    public async Task UpdateAsync(HospitalDTO hospitalDto)
-    {
-        try
-        {
-            var hospital = _mapper.Map<Hospital>(hospitalDto);
-            await _hospitalRepository.UpdateAsync(hospital);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error occurred while updating hospital.");
-            throw;
-        }
-    }
-
-    public async Task SoftDeleteAsync(Guid id)
-    {
-        try
-        {
-            await _hospitalRepository.SoftDeleteAsync(id);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, $"Error occurred while soft deleting hospital with ID: {id}");
-            throw;
-        }
     }
 }

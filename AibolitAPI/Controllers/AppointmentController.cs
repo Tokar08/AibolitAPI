@@ -52,7 +52,7 @@ public class AppointmentController(IAppointmentService appointmentService) : Con
         }
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("{id:guid}")]
     public async Task<ActionResult> UpdateAsync(Guid id, [FromBody] AppointmentDTO appointmentDto)
     {
         try
@@ -68,7 +68,7 @@ public class AppointmentController(IAppointmentService appointmentService) : Con
         }
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:guid}")]
     public async Task<ActionResult> SoftDeleteAsync(Guid id)
     {
         try

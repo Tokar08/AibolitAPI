@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AibolitAPI.Repositories;
 
-public class RecommendationRepository : IRecommendationRepository
+public class RecommendationRepository : Repository<Recommendation>, IRecommendationRepository
 {
     private readonly AibolitDbContext _context;
 
-    public RecommendationRepository(AibolitDbContext context)
+    public RecommendationRepository(AibolitDbContext context) : base(context)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
     }

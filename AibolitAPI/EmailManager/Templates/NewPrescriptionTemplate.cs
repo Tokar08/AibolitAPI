@@ -15,7 +15,16 @@ public class NewPrescriptionTemplate : IEmailTemplate
 
     public string GetBody(object model)
     {
+        ArgumentNullException.ThrowIfNull(model);
+
         var templateContent = File.ReadAllText(_templatePath);
+
+        if (model is object[] multipleValues)
+            for (var i = 0; i < multipleValues.Length; i++)
+                templateContent = templateContent.Replace($"{{{i}}}", multipleValues[i]?.ToString() ?? string.Empty);
+        else
+            throw new InvalidCastException($"Unsupported model type: {model.GetType()}");
+
         return templateContent;
     }
 }
