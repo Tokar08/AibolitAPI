@@ -2,20 +2,13 @@
 
 namespace AibolitAPI.EmailManager.Templates;
 
-public class FriendlyReminderTemplate : IEmailTemplate
+public class FriendlyReminderTemplate(string templatePath) : IEmailTemplate
 {
-    private readonly string _templatePath;
-
-    public FriendlyReminderTemplate(string templatePath)
-    {
-        _templatePath = templatePath;
-    }
-
-    public string Subject => "Мы всегда рядом!";
+    public string Subject => "Ми завжди поряд!";
 
     public string GetBody(object model)
     {
-        var templateContent = File.ReadAllText(_templatePath);
+        var templateContent = File.ReadAllText(templatePath);
         return templateContent;
     }
 }

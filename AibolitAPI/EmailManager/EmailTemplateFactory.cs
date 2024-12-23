@@ -3,18 +3,11 @@ using AibolitAPI.Interfaces;
 
 namespace AibolitAPI.EmailManager;
 
-public class EmailTemplateFactory : IEmailTemplateFactory
+public class EmailTemplateFactory(string basePath) : IEmailTemplateFactory
 {
-    private readonly string _basePath;
-
-    public EmailTemplateFactory(string basePath)
-    {
-        _basePath = basePath;
-    }
-
     public IEmailTemplate GetTemplate(string templateName)
     {
-        var filePath = Path.Combine(_basePath, $"{templateName}.html");
+        var filePath = Path.Combine(basePath, $"{templateName}.html");
 
         return templateName switch
         {

@@ -76,16 +76,6 @@ public class AibolitDbContext : DbContext
             .HasForeignKey(a => a.ManagedHospitalId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        modelBuilder.Entity<Administrator>()
-            .HasMany(a => a.Doctors)
-            .WithOne()
-            .OnDelete(DeleteBehavior.Restrict);
-
-        modelBuilder.Entity<Administrator>()
-            .HasMany(a => a.Patients)
-            .WithOne()
-            .OnDelete(DeleteBehavior.Restrict);
-
 
         // ---== Patient ==---
         modelBuilder.Entity<Patient>()

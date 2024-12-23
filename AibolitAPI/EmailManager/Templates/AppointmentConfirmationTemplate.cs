@@ -2,22 +2,15 @@
 
 namespace AibolitAPI.EmailManager.Templates;
 
-public class AppointmentConfirmationTemplate : IEmailTemplate
+public class AppointmentConfirmationTemplate(string templatePath) : IEmailTemplate
 {
-    private readonly string _templatePath;
-
-    public AppointmentConfirmationTemplate(string templatePath)
-    {
-        _templatePath = templatePath;
-    }
-
-    public string Subject => "Подтверждение записи на прием";
+    public string Subject => "Підтвердження запису на прийом!";
 
     public string GetBody(object model)
     {
         ArgumentNullException.ThrowIfNull(model);
 
-        var templateContent = File.ReadAllText(_templatePath);
+        var templateContent = File.ReadAllText(templatePath);
 
         if (model is object[] multipleValues)
             for (var i = 0; i < multipleValues.Length; i++)

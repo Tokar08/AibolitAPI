@@ -1,6 +1,7 @@
 ﻿using AibolitAPI.DTOs;
 using AibolitAPI.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
 
 namespace AibolitAPI.Controllers;
 
@@ -23,11 +24,17 @@ public class PatientController(IPatientService patientService) : ControllerBase
     }
 
     [HttpPost("{doctorId:guid}/appointments")]
-    public async Task<IActionResult> CreateAppointment(Guid doctorId, Guid patientId)
+    public async Task<IActionResult> CreateAppointment(Guid doctorId, Guid patientId,
+        [FromQuery] DateTime appointmentDate)
     {
         try
         {
-            await patientService.CreateAppointmentAsync(doctorId, patientId);
+            var ukraineTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Kiev");
+            var appointmentDateUtc = TimeZoneInfo.ConvertTimeToUtc(appointmentDate, ukraineTimeZone);
+
+            await patientService.CreateAppointmentAsync(doctorId, patientId, appointmentDateUtc);
+            Log.Information(
+                $"Creating appointment: DoctorId={doctorId}, PatientId={patientId}, AppointmentDate={appointmentDateUtc}");
             return Ok(new { message = "Appointment successfully created." });
         }
         catch (Exception ex)
@@ -35,6 +42,7 @@ public class PatientController(IPatientService patientService) : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+
 
     [HttpDelete("{patientId:guid}/appointments/{appointmentId:guid}/cancel")]
     public async Task<IActionResult> CancelAppointment(Guid patientId, Guid appointmentId)

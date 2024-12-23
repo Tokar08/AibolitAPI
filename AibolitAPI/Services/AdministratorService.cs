@@ -51,7 +51,7 @@ public class AdministratorService : IAdministratorService
             admin => admin.User.KeycloakId.ToString()
         );
 
-        await Task.WhenAll(administratorsWithSSO.Select(admin => UpdateDoctorsAndPatients(admin, page, size)));
+        //await Task.WhenAll(administratorsWithSSO.Select(admin => UpdateDoctorsAndPatients(admin, page, size)));
 
         return _keycloakService.Serialize(administratorsWithSSO);
     }
@@ -67,7 +67,7 @@ public class AdministratorService : IAdministratorService
                 admin => admin.User.KeycloakId.ToString()
             );
 
-            await UpdateDoctorsAndPatients(administratorWithSSO, 1, int.MaxValue);
+            //await UpdateDoctorsAndPatients(administratorWithSSO, 1, int.MaxValue);
             return _keycloakService.Serialize(administratorWithSSO);
         }
         catch (Exception ex)
@@ -153,14 +153,14 @@ public class AdministratorService : IAdministratorService
         }
     }
 
-    private async Task UpdateDoctorsAndPatients(AdministratorDTO administrator, int page, int size)
+    /*private async Task UpdateDoctorsAndPatients(AdministratorDTO administrator, int page, int size)
     {
         if (administrator.Doctors != null && administrator.Doctors.Count != 0)
             await UpdateDoctors(administrator.Doctors, page, size);
 
         if (administrator.Patients != null && administrator.Patients.Count != 0)
             await UpdatePatients(administrator.Patients, page, size);
-    }
+    }*/
 
     private async Task UpdateDoctors(IEnumerable<DoctorDTO> doctors, int page, int size)
     {

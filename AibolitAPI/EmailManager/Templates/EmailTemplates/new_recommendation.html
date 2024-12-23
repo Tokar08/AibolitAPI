@@ -1,11 +1,92 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Нова рекомендація від Aibolit</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 50px auto;
+            background-color: #ffffff;
+            border-radius: 15px;
+            border: 2px solid #76B9FF;
+            overflow: hidden;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .header img {
+            width: 400px;
+            height: auto;
+            border-radius: 10px;
+        }
+
+        .content {
+            padding: 30px;
+            text-align: left;
+        }
+
+        .content h1 {
+            font-size: 26px;
+            color: #333;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .content h1 .highlight {
+            color: #76B9FF;
+            font-weight: bold;
+        }
+
+        .content p {
+            font-size: 18px;
+            line-height: 1.8;
+            color: #555;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .email-container {
+                width: 95%;
+            }
+
+            .content h1 {
+                font-size: 22px;
+            }
+
+            .content p {
+                font-size: 16px;
+            }
+        }
+    </style>
 </head>
 <body>
-<h1>Привет, {0}. У вас новая рекомендация!</h1>
-<p>Врач {1} выписал(а) вам новую рекомендацию. Пожалуйста, ознакомьтесь с деталями.</p>
+<div class="email-container">
+
+    <div class="content">
+        <h1>Привіт, <span class="highlight">{0}</span>!</h1>
+        <h1>У вас нова рекомендація!</h1>
+        <div class="header">
+            <img alt="Aibolit Recommendation Header"
+                 src="https://storage.googleapis.com/aibolit-bucket/system/recommendation_header.jpg">
+        </div>
+        <p>Лікар <span style="color: #76B9FF;">{1}</span> виписав(ла) вам нову рекомендацію. Ми
+            рекомендуємо ознайомитися з
+            деталями та дотримуватися рекомендацій лікаря для досягнення найкращих результатів.</p>
+        <p>З Aibolit ви можете легко організувати всі медичні документи та своєчасно записуватися на прийом до лікаря.
+            Ми завжди поруч, щоб допомогти вам подбати про своє здоров'я!</p>
+    </div>
+</div>
 </body>
 </html>

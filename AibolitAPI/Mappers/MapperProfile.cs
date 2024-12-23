@@ -20,8 +20,6 @@ public class MapperProfile : Profile
 
         // Mapping for Administrator <-> AdministratorDTO
         CreateMap<Administrator, AdministratorDTO>()
-            .ForMember(dest => dest.Doctors, opt => opt.MapFrom(src => src.Doctors))
-            .ForMember(dest => dest.Patients, opt => opt.MapFrom(src => src.Patients))
             .ReverseMap()
             .MaxDepth(2);
 

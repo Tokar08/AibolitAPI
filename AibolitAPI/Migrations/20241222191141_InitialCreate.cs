@@ -135,18 +135,11 @@ namespace AibolitAPI.Migrations
                     PhotoUrl = table.Column<string>(type: "text", nullable: false),
                     VisitCount = table.Column<int>(type: "integer", nullable: false),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    AdministratorId = table.Column<Guid>(type: "uuid", nullable: true),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Doctors", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Doctors_Administrators_AdministratorId",
-                        column: x => x.AdministratorId,
-                        principalTable: "Administrators",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Doctors_Hospitals_HospitalId",
                         column: x => x.HospitalId,
@@ -194,18 +187,11 @@ namespace AibolitAPI.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     MedicalRecordId = table.Column<Guid>(type: "uuid", nullable: false),
-                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    AdministratorId = table.Column<Guid>(type: "uuid", nullable: true)
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Patients", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Patients_Administrators_AdministratorId",
-                        column: x => x.AdministratorId,
-                        principalTable: "Administrators",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Patients_MedicalRecords_MedicalRecordId",
                         column: x => x.MedicalRecordId,
@@ -406,11 +392,6 @@ namespace AibolitAPI.Migrations
                 column: "PatientId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Doctors_AdministratorId",
-                table: "Doctors",
-                column: "AdministratorId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Doctors_HospitalId",
                 table: "Doctors",
                 column: "HospitalId");
@@ -434,11 +415,6 @@ namespace AibolitAPI.Migrations
                 name: "IX_PatientDoctorLikes_PatientId",
                 table: "PatientDoctorLikes",
                 column: "PatientId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Patients_AdministratorId",
-                table: "Patients",
-                column: "AdministratorId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Patients_MedicalRecordId",
@@ -496,6 +472,9 @@ namespace AibolitAPI.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "Administrators");
+
+            migrationBuilder.DropTable(
                 name: "Appointments");
 
             migrationBuilder.DropTable(
@@ -523,16 +502,13 @@ namespace AibolitAPI.Migrations
                 name: "Doctors");
 
             migrationBuilder.DropTable(
-                name: "Administrators");
-
-            migrationBuilder.DropTable(
-                name: "WorkSchedules");
-
-            migrationBuilder.DropTable(
                 name: "Hospitals");
 
             migrationBuilder.DropTable(
                 name: "Users");
+
+            migrationBuilder.DropTable(
+                name: "WorkSchedules");
 
             migrationBuilder.DropTable(
                 name: "Roles");

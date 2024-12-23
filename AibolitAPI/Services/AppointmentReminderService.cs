@@ -24,6 +24,7 @@ public class AppointmentReminderService : BackgroundService
             using (var scope = _serviceScopeFactory.CreateScope())
             {
                 var appointmentRepository = scope.ServiceProvider.GetRequiredService<IAppointmentRepository>();
+                var hospitalService = scope.ServiceProvider.GetRequiredService<IHospitalService>();
                 var patientService = scope.ServiceProvider.GetRequiredService<IPatientService>();
                 var doctorService = scope.ServiceProvider.GetRequiredService<IDoctorService>();
                 var notificationSender = scope.ServiceProvider.GetRequiredService<INotificationSender>();
@@ -36,8 +37,9 @@ public class AppointmentReminderService : BackgroundService
 
                 foreach (var appointment in upcomingAppointments)
                 {
-                    var appointmentTimeUkraine = appointment.AppointmentDate;
-                    var reminderTimeUkraine = appointmentTimeUkraine.AddHours(-1);
+                    var appointmentTimeUkraine =
+                        TimeZoneInfo.ConvertTimeFromUtc(appointment.AppointmentDate, ukraineTimeZone);
+                    var reminderTimeUkraine = appointmentTimeUkraine.AddMinutes(-1);
 
                     if (!IsReminderTime(nowUkraine, reminderTimeUkraine))
                         continue;
@@ -50,6 +52,10 @@ public class AppointmentReminderService : BackgroundService
                     var doctorJson = await doctorService.GetByIdAsync(appointment.DoctorId);
                     var doctor = JsonConvert.DeserializeObject<DoctorDTO>(doctorJson);
 
+                    var hospitalJson = await hospitalService.GetByIdAsync(doctor.HospitalId);
+                    var hospital = JsonConvert.DeserializeObject<HospitalDTO>(hospitalJson);
+                    var hospitalAddress = hospital?.Address ?? "Адрес не указан";
+
                     var template = templateFactory.GetTemplate("appointment_reminder");
                     await notificationSender.SendAsync(
                         patient.Email,
@@ -57,19 +63,22 @@ public class AppointmentReminderService : BackgroundService
                         new object[]
                         {
                             patient.FirstName,
+                            doctor.PhotoUrl,
                             $"{doctor.FirstName} {doctor.LastName}",
-                            appointmentTimeUkraine.ToString("dd.MM.yyyy HH:mm")
+                            appointmentTimeUkraine.ToString("dd.MM.yyyy HH:mm"),
+                            hospitalAddress
                         }
                     );
                 }
 
                 await ProcessFriendlyReminder(notificationSender, patientService, templateFactory, nowUkraine);
-                await ProcessDeseaseSearchInfo(notificationSender, patientService, templateFactory, nowUkraine);
+                await ProcessDiseaseSearchInfo(notificationSender, patientService, templateFactory, nowUkraine);
             }
 
             await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
         }
     }
+
 
     private async Task ProcessFriendlyReminder(
         INotificationSender notificationSender,
@@ -102,7 +111,7 @@ public class AppointmentReminderService : BackgroundService
         }
     }
 
-    private async Task ProcessDeseaseSearchInfo(
+    private async Task ProcessDiseaseSearchInfo(
         INotificationSender notificationSender,
         IPatientService patientService,
         IEmailTemplateFactory templateFactory,

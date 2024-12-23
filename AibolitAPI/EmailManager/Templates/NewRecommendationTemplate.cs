@@ -2,22 +2,15 @@
 
 namespace AibolitAPI.EmailManager.Templates;
 
-public class NewRecommendationTemplate : IEmailTemplate
+public class NewRecommendationTemplate(string templatePath) : IEmailTemplate
 {
-    private readonly string _templatePath;
-
-    public NewRecommendationTemplate(string templatePath)
-    {
-        _templatePath = templatePath;
-    }
-
-    public string Subject => "Новая рекомендация";
+    public string Subject => "Нова рекомендація!";
 
     public string GetBody(object model)
     {
         ArgumentNullException.ThrowIfNull(model);
 
-        var templateContent = File.ReadAllText(_templatePath);
+        var templateContent = File.ReadAllText(templatePath);
 
         if (model is object[] multipleValues)
             for (var i = 0; i < multipleValues.Length; i++)

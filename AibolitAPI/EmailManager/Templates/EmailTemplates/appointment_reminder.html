@@ -1,12 +1,169 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Нагадування про прийом</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 15px;
+            border: 2px solid #76B9FF;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        .header {
+            background-color: #76B9FF;
+            color: #ffffff;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .content {
+            padding: 20px;
+            color: #000D1B;
+        }
+
+        .content h2 {
+            font-size: 20px;
+            color: #000D1B;
+            line-height: 1.4;
+            margin: 10px 0;
+        }
+
+        .info-box {
+            background-color: #f1f9ff;
+            border: 1px solid #d3e6f5;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            margin-bottom: 15px;
+        }
+
+        .info-item .label {
+            font-size: 18px;
+            color: #000D1B;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .info-item img {
+            width: 120px;
+            height: 120px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            margin-right: 30px;
+        }
+
+        .info-item .value {
+            font-size: 18px;
+            color: #000D1B;
+            margin: 0;
+        }
+
+        .highlight {
+            color: #76B9FF;
+        }
+
+        .doctor-row {
+            display: flex;
+            align-items: center;
+        }
+
+        .footer {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-top: 1px solid #d3e6f5;
+            text-align: center;
+        }
+
+        .footer p {
+            font-size: 16px;
+            color: #000D1B;
+            margin: 10px 0;
+        }
+
+        .footer img {
+            width: 80px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 768px) {
+            .content h2 {
+                font-size: 18px;
+            }
+
+            .footer img {
+                width: 60px;
+            }
+
+            .doctor-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .info-item img {
+                margin-bottom: 10px;
+                margin-right: 0;
+            }
+        }
+    </style>
 </head>
 <body>
-<h1>Напоминание о приеме!</h1>
-<p>Не забудьте о своем приеме, {0}!</p>
-<p>Прием будет у {1} в {2}!</p>
+<div class="card">
+    <div class="header">
+        <h1>Нагадування про прийом</h1>
+    </div>
+    <div class="content">
+        <h2>Привіт, <span class="highlight">{0}</span>!</h2>
+        <p style="font-size: 18px; color: #000D1B;">Не забудьте про свій прийом!</p>
+        <div class="info-box">
+            <div class="info-item">
+                <p class="label">У лікаря:</p>
+                <div class="doctor-row">
+                    <img alt="Фото лікаря" src="{1}">
+                    <p class="value">{2}</p>
+                </div>
+            </div>
+            <div class="info-item">
+                <p class="label">Дата і час:</p>
+                <p class="value highlight">{3}</p>
+            </div>
+            <div class="info-item">
+                <p class="label">Адреса:</p>
+                <p class="value">{4}</p>
+            </div>
+        </div>
+        <p style="font-size: 16px; color: #000D1B;">
+            Ми завжди раді допомогти вам зберегти здоров'я. Якщо у вас виникнуть питання, звертайтеся до нас — ми поруч,
+            щоб підтримати вас!
+        </p>
+    </div>
+    <div class="footer">
+        <p>Піклуйтесь про своє здоров'я!</p>
+        <img alt="Aibolit Logo" src="https://storage.googleapis.com/aibolit-bucket/system/aibolit-logo.jpg">
+    </div>
+</div>
 </body>
 </html>

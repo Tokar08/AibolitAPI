@@ -8,19 +8,19 @@
         body {
             margin: 0;
             padding: 0;
-            background-color: #ffffff;
+            background-color: #f8f9fa;
             font-family: Arial, sans-serif;
         }
 
         table {
             width: 100%;
-            max-width: 550px;
+            max-width: 600px;
             margin: 50px auto;
             background-color: #ffffff;
             border-radius: 20px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            border: 2px solid #78B9FF;
+            border: 2px solid #76B9FF;
             box-sizing: border-box;
+            overflow: hidden;
         }
 
         td {
@@ -28,33 +28,62 @@
             text-align: left;
         }
 
-        .text-container {
-            padding: 20px;
-            background-color: #ffffff;
-            border-radius: 10px;
-            font-size: 18px;
-            line-height: 1.6;
-            color: #333;
-            word-wrap: break-word;
-        }
-
-        .centered-text {
+        .header-text {
             font-size: 24px;
             font-weight: bold;
             text-align: center;
-            margin: 0;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .main-text {
+            font-size: 18px;
+            line-height: 1.6;
+            color: #555;
+            margin-bottom: 20px;
+        }
+
+        .image-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .image-container img {
+            width: 100%;
+            max-width: 500px;
+            border-radius: 20px;
+        }
+
+        .highlight-box {
+            background-color: #fce9f1;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #555;
+            margin-top: 20px;
+        }
+
+        .highlight-box span {
+            color: #333;
+            font-weight: bold;
         }
 
         @media (max-width: 768px) {
             table {
-                width: 100%;
-                max-width: 100%;
-                margin: 0;
+                width: 95%;
             }
 
-            .text-container {
-                padding: 15px;
+            .header-text {
+                font-size: 20px;
+            }
+
+            .main-text {
                 font-size: 16px;
+            }
+
+            .highlight-box {
+                font-size: 14px;
             }
         }
     </style>
@@ -62,16 +91,23 @@
 <body>
 <table role="presentation">
     <tr>
-        <td class="text-container">
-            <p class="centered-text">🌟Привіт від Aibolit! 🌟</p>
-            <p>Ми дуже раді, що можемо підтримувати ваше здоров'я! 💙 В Aibolit ми віримо, що маленькі кроки сьогодні
-                приведуть до великого здоров'я завтра! 🌈</p>
-
-            <p>Не забувайте записатися на прийом до лікаря — це важливий крок для вашого благополуччя! 🩺 Завжди готові
-                допомогти вам знайти найкращих лікарів та послуги для здоров'я! 🌿</p>
-
-            <p>Піклуйтесь про себе, і ми будемо поруч, щоб допомогти! Ваше здоров'я — це ваша найцінніша інвестиція!
-                💪</p>
+        <td>
+            <p class="header-text">🌟 Привіт від Aibolit! 🌟</p>
+            <p class="main-text">Ми дуже раді, що можемо підтримувати ваше здоров'я! 💙 У Aibolit ми віримо, що маленькі
+                кроки сьогодні приведуть до великого здоров'я завтра! 🌈</p>
+            <p class="main-text">Не забувайте записатися на прийом до лікаря або перевірку — це важливий крок для вашого
+                благополуччя! 🩺 Якщо вам потрібна допомога у пошуку правильного лікаря або послуги, ми завжди поруч, щоб
+                допомогти! 🌿</p>
+            <div class="image-container">
+                <img alt="Dog doctor"
+                     src="https://storage.googleapis.com/aibolit-bucket/system/friendly_reminder_dog.jpg">
+            </div>
+            <div class="highlight-box">
+                <p>Пам'ятайте, ваше здоров'я — це основа всього, що ви любите і робите. Турбота про себе — це найкращий
+                    подарунок, який ви можете зробити для себе! 🌟</p>
+                <p>Дбайте про себе, залишайтеся сильними, і знайте, що ми поруч, щоб підтримати вас на кожному етапі. ❤️
+                    Aibolit — це більше, ніж сервіс, це ваш партнер у покращенні якості життя! 😊</p>
+            </div>
         </td>
     </tr>
 </table>

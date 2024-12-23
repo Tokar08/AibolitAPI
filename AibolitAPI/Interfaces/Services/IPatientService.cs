@@ -20,5 +20,5 @@ public interface IPatientService
     Task<string> GetRecommendationsForPatientAsync(Guid patientId);
     Task<object> GetRecommendationByIdWithDoctorAsync(Guid patientId, Guid recommendationId);
     Task CancelAppointmentAsync(Guid patientId, Guid appointmentId);
-    Task CreateAppointmentAsync(Guid doctorId, Guid patientId);
+    Task CreateAppointmentAsync(Guid doctorId, Guid patientId, DateTime appointmentDate);
 }

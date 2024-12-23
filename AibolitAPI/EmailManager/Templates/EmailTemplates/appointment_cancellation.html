@@ -1,11 +1,112 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Скасування запису</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 15px;
+            border: 2px solid #FF4B4E;
+            overflow: hidden;
+            text-align: left;
+            box-sizing: border-box;
+        }
+
+        .header {
+            background-color: #FF4B4E;
+            color: #ffffff;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .info-box {
+            background-color: #fef4f4;
+            border: 1px solid #ffdada;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            margin-bottom: 15px;
+        }
+
+        .footer {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-top: 1px solid #ffdada;
+            text-align: center;
+        }
+
+        .footer img {
+            width: 80px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 768px) {
+            .card {
+                margin: 10px;
+            }
+
+            .footer img {
+                width: 60px;
+            }
+        }
+    </style>
 </head>
 <body>
-<h1>Что-то пошло не так...</h1>
-<p>Мы сожалеем, но запланированная запись на прием на {0} у доктора {1} и пациентом {2} была отменена.</p>
+<div class="card">
+    <div class="header">
+        <h1>Скасування запису</h1>
+    </div>
+    <div class="content">
+        <div class="info-box">
+            <div class="info-item">
+                <p style="font-size: 18px; color: #000D1B; font-weight: bold; margin: 5px 0;">Дата і час:</p>
+                <p style="font-size: 18px; color: #FF4B4E; margin: 5px 0;">{0}</p>
+            </div>
+            <div class="info-item">
+                <p style="font-size: 18px; color: #000D1B; font-weight: bold; margin: 5px 0;">Лікар:</p>
+                <p style="font-size: 18px; color: #FF4B4E; margin: 5px 0;">{1}</p>
+            </div>
+            <div class="info-item">
+                <p style="font-size: 18px; color: #000D1B; font-weight: bold; margin: 5px 0;">Пацієнт:</p>
+                <p style="font-size: 18px; color: #FF4B4E; margin: 5px 0;">{2}</p>
+            </div>
+        </div>
+        <p style="font-size: 18px; color: #000D1B; line-height: 1.8; margin-top: 20px;">Ми шкодуємо, що ваш запис на
+            прийом було скасовано. Якщо у вас є запитання або ви хочете записатися ще раз, будь ласка, зв'яжіться з нами
+            — ми завжди готові допомогти!</p>
+    </div>
+    <div class="footer">
+        <p style="font-size: 16px; color: #000D1B;">Піклуйтесь про своє здоров'я!</p>
+        <img alt="Aibolit Logo" src="https://storage.googleapis.com/aibolit-bucket/system/aibolit-logo.jpg">
+    </div>
+</div>
 </body>
 </html>

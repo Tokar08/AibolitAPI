@@ -56,27 +56,33 @@ public class PatientService(
         return keycloakService.Serialize(appointmentEntities.ToList());
     }
 
-    public async Task CreateAppointmentAsync(Guid doctorId, Guid patientId)
+    public async Task CreateAppointmentAsync(Guid doctorId, Guid patientId, DateTime appointmentDate)
     {
         try
         {
             var dbPatient = await GetPatientAsync(patientId);
             var dbDoctor = await GetDoctorAsync(doctorId);
 
-            if (dbPatient.MedicalRecord.DoctorId == null && dbDoctor.Specialization == "Терапевт")
+            if (dbPatient.MedicalRecord.DoctorId == null
+                && dbDoctor.Specialization.Equals("Терапевт", StringComparison.OrdinalIgnoreCase))
                 await UpdatePatientDoctorAsync(dbPatient, doctorId);
-
-            var appointment = await CreateAppointmentAsync(patientId, doctorId, dbPatient.MedicalRecordId);
+            var appointment = await CreateAppointmentAsync(
+                patientId,
+                doctorId,
+                dbPatient.MedicalRecordId,
+                appointmentDate
+            );
 
             var patientDto = await GetPatientDtoAsync(dbPatient);
             var doctorDto = await GetDoctorDtoAsync(dbDoctor);
-            
+
             await AddDoctorToPatientIfNeededAsync(dbPatient, dbDoctor);
 
             await SendAppointmentConfirmationAsync(patientDto, doctorDto, appointment);
-            
+
             logger.LogInformation(
-                $"Appointment successfully created for PatientId: {patientId}, DoctorId: {doctorId}");
+                $"Appointment successfully created for PatientId: {patientId}, " +
+                $"DoctorId: {doctorId}, at {appointmentDate:yyyy-MM-dd HH:mm}");
         }
         catch (Exception ex)
         {
@@ -395,20 +401,29 @@ public class PatientService(
         await medicalRecordRepository.UpdateAsync(dbPatient.MedicalRecord);
     }
 
-    private async Task<Appointment> CreateAppointmentAsync(Guid patientId, Guid doctorId, Guid medicalRecordId)
+    private async Task<Appointment> CreateAppointmentAsync(
+        Guid patientId,
+        Guid doctorId,
+        Guid medicalRecordId,
+        DateTime appointmentDateUtc)
     {
+        if (appointmentDateUtc < DateTime.UtcNow)
+            throw new ArgumentException("Appointment date cannot be in the past.");
+
         var appointment = new Appointment
         {
             PatientId = patientId,
             DoctorId = doctorId,
             MedicalRecordId = medicalRecordId,
-            AppointmentDate = DateTime.UtcNow,
+            AppointmentDate = appointmentDateUtc,
             IsScheduled = true,
             IsActive = true
         };
+
         await appointmentRepository.CreateAsync(appointment);
         return appointment;
     }
+
 
     private async Task<PatientDTO> GetPatientDtoAsync(Patient dbPatient)
     {
@@ -439,13 +454,15 @@ public class PatientService(
             new object[]
             {
                 patientDto.FirstName,
+                doctorDto.PhotoUrl,
                 $"{doctorDto.FirstName} {doctorDto.LastName}",
-                appointmentTimeUkraine.ToString("HH:mm dd.MM.yyyy"),
+                appointmentTimeUkraine.ToString("dd.MM.yyyy HH:mm"),
                 doctorDto.Email,
                 doctorDto.PhoneNumber
             }
         );
     }
+
 
     private async Task AddDoctorToPatientIfNeededAsync(Patient dbPatient, Doctor dbDoctor)
     {
@@ -464,14 +481,14 @@ public class PatientService(
 
         var patientEmailTask = notificationSender.SendAsync(patient.Email, template, new object[]
         {
-            appointmentTimeUkraine.ToString("HH:mm dd.MM.yyyy"),
+            appointmentTimeUkraine.ToString("dd.MM.yyyy HH:mm "),
             $"{doctor.FirstName} {doctor.LastName}",
             $"{patient.FirstName} {patient.LastName}"
         });
 
         var doctorEmailTask = notificationSender.SendAsync(doctor.Email, template, new object[]
         {
-            appointmentTimeUkraine.ToString("HH:mm dd.MM.yyyy"),
+            appointmentTimeUkraine.ToString("dd.MM.yyyy HH:mm "),
             $"{doctor.FirstName} {doctor.LastName}",
             $"{patient.FirstName} {patient.LastName}"
         });

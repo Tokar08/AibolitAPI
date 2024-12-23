@@ -37,8 +37,8 @@ public class AppointmentSuccessCheckService : BackgroundService
                     Console.WriteLine($"Appointment ID: {appointment.Id}");
                     Console.WriteLine($"Appointment Time (UTC): {appointmentTimeUtc}");
 
-                    //TODO: для теста 2 минуты, должно быть 20 минут
-                    var successTime = appointmentTimeUtc.AddMinutes(2);
+                    //TODO: для теста 5 минут, должно быть 20 минут
+                    var successTime = appointmentTimeUtc.AddMinutes(5);
 
                     Console.WriteLine($"Success Time (UTC): {successTime}");
 

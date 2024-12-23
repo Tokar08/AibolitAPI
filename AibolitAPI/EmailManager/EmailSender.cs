@@ -5,16 +5,10 @@ using MimeKit;
 
 namespace AibolitAPI.EmailManager;
 
-public class EmailSender : INotificationSender
+public class EmailSender(string senderEmail, string senderPassword) : INotificationSender
 {
-    private readonly string _senderEmail;
-    private readonly string _senderPassword;
-
-    public EmailSender(string senderEmail, string senderPassword)
-    {
-        _senderEmail = senderEmail ?? throw new ArgumentNullException(nameof(senderEmail));
-        _senderPassword = senderPassword ?? throw new ArgumentNullException(nameof(senderPassword));
-    }
+    private readonly string _senderEmail = senderEmail ?? throw new ArgumentNullException(nameof(senderEmail));
+    private readonly string _senderPassword = senderPassword ?? throw new ArgumentNullException(nameof(senderPassword));
 
     public async Task SendAsync(string recipient, IEmailTemplate template, object model)
     {

@@ -1,11 +1,133 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>AI Bolit</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card {
+            background-color: white;
+            border: 2px solid #76B9FF;
+            border-radius: 15px;
+            width: 600px;
+            max-width: 90%;
+            text-align: center;
+            padding: 30px;
+            margin: auto;
+        }
+
+        .card img {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            font-size: 2.2em;
+            margin: 0 0 20px;
+            color: #333;
+        }
+
+        .card a {
+            color: #76B9FF;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .card p {
+            font-size: 1.2em;
+            line-height: 1.8;
+            margin: 20px 0;
+            text-align: left;
+            color: #555;
+        }
+
+        .features {
+            margin-top: 25px;
+            text-align: left;
+        }
+
+        .features div {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .features div .oval {
+            width: 8px;
+            height: 25px;
+            background-color: #76B9FF;
+            border-radius: 12px;
+            display: inline-block;
+            margin-right: 15px;
+        }
+
+        .features div span {
+            font-size: 1.2em;
+            color: #76B9FF;
+            line-height: 25px;
+        }
+
+        @media (max-width: 768px) {
+            .card {
+                width: 100%;
+                border-radius: 10px;
+                padding: 20px;
+            }
+
+            .card h2 {
+                font-size: 1.8em;
+            }
+
+            .card p {
+                font-size: 1em;
+            }
+
+            .features div span {
+                font-size: 1em;
+            }
+        }
+    </style>
 </head>
 <body>
-<h1>Мы помогаем находить заболевания!🔍💙</h1>
-<p>Наш сервис помогает находить информацию о заболеваниях. Используйте его для поиска нужной информации.</p>
+<div class="card">
+    <img alt="AI Bolit" src="https://storage.googleapis.com/aibolit-bucket/system/aibolit-AI.jpg">
+    <h2>Дізнайтеся більше про першого AI-бота у медицині <a href="#">AI bolit</a></h2>
+    <p>
+        Інтеграція штучного інтелекту у медицину принесла революційні зміни, і AI bolit
+        стоїть на передовій як віртуальний медичний асистент. Він створений для
+        діагностики поширених захворювань та розробки індивідуальних рекомендацій, забезпечуючи
+        безпечне та ефективне лікування.
+    </p>
+    <div class="features">
+        <div>
+            <span class="oval"></span>
+            <span>Історія пацієнта та його вподобання</span>
+        </div>
+        <div>
+            <span class="oval"></span>
+            <span>Доступна вартість та ефективність</span>
+        </div>
+        <div>
+            <span class="oval"></span>
+            <span>Доступність медичних послуг</span>
+        </div>
+        <div>
+            <span class="oval"></span>
+            <span>Синхронна ефективність</span>
+        </div>
+    </div>
+</div>
 </body>
 </html>

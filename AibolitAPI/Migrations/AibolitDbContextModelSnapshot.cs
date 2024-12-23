@@ -18,6 +18,9 @@ namespace AibolitAPI.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "8.0.8")
+                .HasAnnotation("Proxies:ChangeTracking", false)
+                .HasAnnotation("Proxies:CheckEquality", false)
+                .HasAnnotation("Proxies:LazyLoading", true)
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -87,9 +90,6 @@ namespace AibolitAPI.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("AdministratorId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("Education")
                         .IsRequired()
                         .HasColumnType("text");
@@ -121,8 +121,6 @@ namespace AibolitAPI.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AdministratorId");
 
                     b.HasIndex("HospitalId");
 
@@ -186,9 +184,6 @@ namespace AibolitAPI.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("AdministratorId")
-                        .HasColumnType("uuid");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -199,8 +194,6 @@ namespace AibolitAPI.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AdministratorId");
 
                     b.HasIndex("MedicalRecordId")
                         .IsUnique();
@@ -463,11 +456,6 @@ namespace AibolitAPI.Migrations
 
             modelBuilder.Entity("AibolitAPI.Models.Doctor", b =>
                 {
-                    b.HasOne("AibolitAPI.Models.Administrator", null)
-                        .WithMany("Doctors")
-                        .HasForeignKey("AdministratorId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("AibolitAPI.Models.Hospital", "Hospital")
                         .WithMany("Doctors")
                         .HasForeignKey("HospitalId")
@@ -504,11 +492,6 @@ namespace AibolitAPI.Migrations
 
             modelBuilder.Entity("AibolitAPI.Models.Patient", b =>
                 {
-                    b.HasOne("AibolitAPI.Models.Administrator", null)
-                        .WithMany("Patients")
-                        .HasForeignKey("AdministratorId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("AibolitAPI.Models.MedicalRecord", "MedicalRecord")
                         .WithOne("Patient")
                         .HasForeignKey("AibolitAPI.Models.Patient", "MedicalRecordId")
@@ -630,13 +613,6 @@ namespace AibolitAPI.Migrations
                         .HasForeignKey("PatientId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("AibolitAPI.Models.Administrator", b =>
-                {
-                    b.Navigation("Doctors");
-
-                    b.Navigation("Patients");
                 });
 
             modelBuilder.Entity("AibolitAPI.Models.Hospital", b =>
