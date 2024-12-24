@@ -103,7 +103,6 @@ public class DoctorController(
         try
         {
             var prescription = await doctorService.GetPatientPrescriptionByIdAsync(doctorId, patientId, prescriptionId);
-
             return new JsonResult(prescription);
         }
         catch (Exception ex)
@@ -160,6 +159,40 @@ public class DoctorController(
             return BadRequest(ex.Message);
         }
     }
+
+    [HttpGet("{doctorId:guid}/work-schedules")]
+    public async Task<IActionResult> GetWorkSchedulesForDoctor(Guid doctorId)
+    {
+        try
+        {
+            var schedules = await doctorService.GetWorkSchedulesForDoctorAsync(doctorId);
+            return Ok(schedules);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPatch("{id:guid}/work-schedules")]
+    public async Task<IActionResult> UpdateWorkSchedules(Guid id, [FromBody] List<WorkScheduleDTO> scheduleDtos)
+    {
+        try
+        {
+            await doctorService.UpdateDoctorSchedulesAsync(id, scheduleDtos);
+
+            return Ok(new { message = "Doctor work schedules updated successfully." });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
 
     [HttpPost]
     public async Task<IActionResult> CreateAsync([FromBody] DoctorDTO doctorDto, string keycloakId)

@@ -28,9 +28,10 @@ public class SpecializationService : ISpecializationService
         return mapper.Map<IEnumerable<SpecializationDTO>>(specializations);
     }
 
-    public async Task<bool> IsTherapistAsync(Guid specializationId)
+    public async Task<bool> IsFamilyDoctorAsync(Guid specializationId)
     {
         var specialization = await specializationRepository.GetByIdAsync(specializationId);
-        return specialization != null && specialization.Title.Equals("Терапевт", StringComparison.OrdinalIgnoreCase);
+        return specialization != null &&
+               specialization.Title.Equals("Сімейний лікар", StringComparison.OrdinalIgnoreCase);
     }
 }

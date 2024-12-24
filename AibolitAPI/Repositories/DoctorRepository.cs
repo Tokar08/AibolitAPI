@@ -50,6 +50,7 @@ public class DoctorRepository : Repository<Doctor>, IDoctorRepository
     {
         return await _context.Doctors
             .Include(d => d.Specialization)
+            .Include(d => d.WorkSchedules)
             .Skip((page - 1) * size)
             .Take(size)
             .ToListAsync();
@@ -59,6 +60,7 @@ public class DoctorRepository : Repository<Doctor>, IDoctorRepository
     {
         return await _context.Doctors
                    .Include(d => d.Specialization)
+                   .Include(d => d.WorkSchedules)
                    .FirstOrDefaultAsync(d => d.Id == id)
                ?? throw new KeyNotFoundException($"Doctor with ID {id} not found.");
     }

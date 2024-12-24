@@ -18,4 +18,6 @@ public interface IDoctorService
     Task<object> GetPatientRecommendationByIdAsync(Guid doctorId, Guid patientId, Guid recommendationId);
     Task<IEnumerable<AppointmentDTO>> GetScheduledAppointmentsByDoctorIdAsync(Guid doctorId);
     Task CancelAppointmentAsync(Guid doctorId, Guid appointmentId);
+    Task UpdateDoctorSchedulesAsync(Guid doctorId, IEnumerable<WorkScheduleDTO> scheduleDtos);
+    Task<List<WorkScheduleDTO>> GetWorkSchedulesForDoctorAsync(Guid doctorId);
 }

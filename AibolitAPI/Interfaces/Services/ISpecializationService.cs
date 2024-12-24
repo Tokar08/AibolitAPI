@@ -6,5 +6,5 @@ public interface ISpecializationService
 {
     Task<SpecializationDTO?> GetSpecializationByTitleAsync(string title);
     Task<IEnumerable<SpecializationDTO>> GetAllSpecializationsAsync();
-    Task<bool> IsTherapistAsync(Guid specializationId);
+    Task<bool> IsFamilyDoctorAsync(Guid specializationId);
 }

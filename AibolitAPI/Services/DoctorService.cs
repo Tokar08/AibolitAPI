@@ -18,7 +18,8 @@ public class DoctorService(
     INotificationSender notificationSender,
     IEmailTemplateFactory templateFactory,
     IUserRepository userRepository,
-    ISpecializationRepository specializationRepository)
+    ISpecializationRepository specializationRepository,
+    IWorkScheduleRepository workScheduleRepository)
     : IDoctorService
 {
     public async Task<IEnumerable<DoctorDTO>> GetAllAsync(int page, int size)
@@ -282,12 +283,12 @@ public class DoctorService(
                 Id = newDoctorId,
                 UserId = newUserId,
                 SpecializationId = specialization.Id,
-                WorkScheduleId = doctorDto.WorkScheduleId,
                 HospitalId = doctorDto.HospitalId,
                 YearsOfExperience = doctorDto.YearsOfExperience,
                 Education = doctorDto.Education,
                 VisitCount = doctorDto.VisitCount,
                 IsActive = true,
+                WorkSchedules = new List<WorkSchedule>(),
                 Patients = new List<Patient>(),
                 LikedByPatients = new List<Patient>()
             };
@@ -342,6 +343,40 @@ public class DoctorService(
         }
     }
 
+    public async Task UpdateDoctorSchedulesAsync(Guid doctorId, IEnumerable<WorkScheduleDTO> scheduleDtos)
+    {
+        var doctor = await doctorRepository.GetByIdAsync(doctorId);
+        if (doctor == null)
+            throw new KeyNotFoundException($"Doctor with ID {doctorId} not found.");
+
+        var newScheduleIds = scheduleDtos.Select(s => s.Id).ToList();
+
+        var existingWorkSchedules = await workScheduleRepository.GetByIdsAsync(newScheduleIds);
+
+        var currentSchedules = doctor.WorkSchedules.ToList();
+
+        foreach (var oldSchedule in currentSchedules.Where(oldSchedule => !newScheduleIds.Contains(oldSchedule.Id)))
+            doctor.WorkSchedules.Remove(oldSchedule);
+
+        foreach (var schedule in existingWorkSchedules.Where(schedule =>
+                     doctor.WorkSchedules.All(ws => ws.Id != schedule.Id)))
+            doctor.WorkSchedules.Add(schedule);
+
+        await doctorRepository.UpdateAsync(doctor);
+    }
+
+    public async Task<List<WorkScheduleDTO>> GetWorkSchedulesForDoctorAsync(Guid doctorId)
+    {
+        var doctor = await doctorRepository.GetByIdAsync(doctorId);
+
+        if (doctor == null)
+            throw new KeyNotFoundException($"Doctor with ID {doctorId} not found.");
+
+        var schedules = doctor.WorkSchedules;
+        var scheduleDtos = mapper.Map<List<WorkScheduleDTO>>(schedules);
+
+        return scheduleDtos;
+    }
 
     public async Task SoftDeleteAsync(Guid id)
     {

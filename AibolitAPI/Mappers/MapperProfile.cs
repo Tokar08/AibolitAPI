@@ -28,6 +28,7 @@ public class MapperProfile : Profile
             .ForMember(dest => dest.Patients, opt => opt.MapFrom(src => src.Patients))
             .ForMember(dest => dest.LikedByPatients, opt => opt.MapFrom(src => src.LikedByPatients))
             .ForMember(dest => dest.SpecializationTitle, opt => opt.MapFrom(src => src.Specialization.Title))
+            .ForMember(dest => dest.WorkSchedules, opt => opt.MapFrom(src => src.WorkSchedules))
             .ReverseMap()
             .MaxDepth(2);
 

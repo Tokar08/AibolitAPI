@@ -45,10 +45,19 @@ public class AibolitDbContext : DbContext
             .OnDelete(DeleteBehavior.SetNull);
 
         modelBuilder.Entity<Doctor>()
-            .HasOne(d => d.WorkSchedule)
-            .WithMany()
-            .HasForeignKey(d => d.WorkScheduleId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .HasMany(d => d.WorkSchedules)
+            .WithMany(ws => ws.Doctors)
+            .UsingEntity<Dictionary<string, object>>(
+                "DoctorWorkSchedule",
+                j => j.HasOne<WorkSchedule>()
+                    .WithMany()
+                    .HasForeignKey("WorkScheduleId")
+                    .OnDelete(DeleteBehavior.Cascade),
+                j => j.HasOne<Doctor>()
+                    .WithMany()
+                    .HasForeignKey("DoctorId")
+                    .OnDelete(DeleteBehavior.Cascade)
+            );
 
         modelBuilder.Entity<Doctor>()
             .HasOne(d => d.Hospital)

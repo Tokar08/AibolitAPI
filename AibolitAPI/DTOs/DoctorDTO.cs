@@ -6,8 +6,6 @@ public class DoctorDTO
     public Guid UserId { get; set; }
 
     public string SpecializationTitle { get; set; }
-    public Guid WorkScheduleId { get; set; }
-
     public Guid HospitalId { get; set; }
     public int YearsOfExperience { get; set; }
     public string Education { get; set; }
@@ -16,6 +14,8 @@ public class DoctorDTO
     public int VisitCount { get; set; }
     public ICollection<PatientDTO>? Patients { get; set; }
     public ICollection<PatientDTO>? LikedByPatients { get; set; }
+    public ICollection<WorkScheduleDTO>? WorkSchedules { get; set; }
+
     public bool IsActive { get; set; }
 
     public string? Email { get; set; }

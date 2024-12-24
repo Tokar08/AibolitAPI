@@ -66,7 +66,7 @@ public class PatientService(
             var dbDoctor = await GetDoctorAsync(doctorId);
 
             if (dbPatient.MedicalRecord.DoctorId == null
-                && await specializationService.IsTherapistAsync(dbDoctor.SpecializationId))
+                && await specializationService.IsFamilyDoctorAsync(dbDoctor.SpecializationId))
                 await UpdatePatientDoctorAsync(dbPatient, doctorId);
 
             var appointment = await CreateAppointmentAsync(

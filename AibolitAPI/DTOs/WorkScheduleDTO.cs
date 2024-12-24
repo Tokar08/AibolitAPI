@@ -7,5 +7,6 @@ public class WorkScheduleDTO
     public TimeSpan StartTime { get; set; }
     public TimeSpan EndTime { get; set; }
     public bool IsActive { get; set; }
+
     public ICollection<ScheduleAdjustmentDTO>? ScheduleAdjustments { get; set; }
 }
