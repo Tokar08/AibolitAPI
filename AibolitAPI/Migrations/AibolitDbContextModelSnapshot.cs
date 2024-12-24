@@ -104,9 +104,8 @@ namespace AibolitAPI.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Specialization")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<Guid>("SpecializationId")
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
@@ -123,6 +122,8 @@ namespace AibolitAPI.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("HospitalId");
+
+                    b.HasIndex("SpecializationId");
 
                     b.HasIndex("UserId");
 
@@ -326,6 +327,24 @@ namespace AibolitAPI.Migrations
                     b.ToTable("ScheduleAdjustments");
                 });
 
+            modelBuilder.Entity("AibolitAPI.Models.Specialization", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Specializations", (string)null);
+                });
+
             modelBuilder.Entity("AibolitAPI.Models.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -462,6 +481,12 @@ namespace AibolitAPI.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("AibolitAPI.Models.Specialization", "Specialization")
+                        .WithMany()
+                        .HasForeignKey("SpecializationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("AibolitAPI.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -475,6 +500,8 @@ namespace AibolitAPI.Migrations
                         .IsRequired();
 
                     b.Navigation("Hospital");
+
+                    b.Navigation("Specialization");
 
                     b.Navigation("User");
 

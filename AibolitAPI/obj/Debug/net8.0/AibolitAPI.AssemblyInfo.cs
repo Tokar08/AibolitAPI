@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AibolitAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ed5ad1f0b3dedf8deb3d1a47d029a0daa5d8bb56")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e37763230fd4de23f6f57af2d76a88e5c129e39e")]
 [assembly: System.Reflection.AssemblyProductAttribute("AibolitAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AibolitAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

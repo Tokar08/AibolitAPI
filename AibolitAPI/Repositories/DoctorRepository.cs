@@ -45,4 +45,21 @@ public class DoctorRepository : Repository<Doctor>, IDoctorRepository
             .Where(doctor => userIds.Contains(doctor.UserId))
             .ToListAsync();
     }
+
+    public override async Task<IEnumerable<Doctor>> GetAllAsync(int page, int size)
+    {
+        return await _context.Doctors
+            .Include(d => d.Specialization)
+            .Skip((page - 1) * size)
+            .Take(size)
+            .ToListAsync();
+    }
+
+    public override async Task<Doctor> GetByIdAsync(Guid id)
+    {
+        return await _context.Doctors
+                   .Include(d => d.Specialization)
+                   .FirstOrDefaultAsync(d => d.Id == id)
+               ?? throw new KeyNotFoundException($"Doctor with ID {id} not found.");
+    }
 }

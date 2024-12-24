@@ -46,6 +46,7 @@ public class StatisticsService : IStatisticsService
         var totalAdministrators = hospital.Administrators?.Count ?? 0;
 
         var patientAgeGroups = GetPatientAgeGroups(patients);
+        var doctorAgeGroups = GetDoctorAgeGroups(doctors);
         var doctorSpecializationDistribution = GetDoctorSpecializationDistribution(doctors);
         var patientSpecializationPercentage =
             GetPatientSpecializationPercentage(doctorSpecializationDistribution, doctors);
@@ -64,6 +65,7 @@ public class StatisticsService : IStatisticsService
             TotalAdministrators = totalAdministrators,
             TotalPatients = totalPatients,
             PatientAgeGroups = patientAgeGroups,
+            DoctorAgeGroups = doctorAgeGroups,
             DoctorSpecializationDistribution = doctorSpecializationDistribution,
             PatientSpecializationPercentage = patientSpecializationPercentage,
             CancellationRate = cancellationRate
@@ -85,8 +87,9 @@ public class StatisticsService : IStatisticsService
             .ToDictionary(g => g.Key, g => g.Count());
 
         var totalPeople = people.Count();
-        if (totalPeople == 0) return new Dictionary<string, double>();
-        return genderCounts.ToDictionary(g => g.Key, g => Math.Round((double)g.Value / totalPeople * 100, 2));
+        return totalPeople == 0
+            ? new Dictionary<string, double>()
+            : genderCounts.ToDictionary(g => g.Key, g => Math.Round((double)g.Value / totalPeople * 100, 2));
     }
 
 
@@ -134,7 +137,17 @@ public class StatisticsService : IStatisticsService
     private static Dictionary<string, int> GetPatientAgeGroups(IEnumerable<PatientDTO> patients)
     {
         return patients
+            .Where(p => !string.IsNullOrWhiteSpace(p.BirthDate))
             .GroupBy(p => GetAgeGroup(p.BirthDate))
+            .ToDictionary(g => g.Key, g => g.Count());
+    }
+
+    //NOTE: Распределение докторов по возрастным группам
+    private static Dictionary<string, int> GetDoctorAgeGroups(IEnumerable<DoctorDTO> doctors)
+    {
+        return doctors
+            .Where(d => !string.IsNullOrWhiteSpace(d.BirthDate)) // Проверяем наличие даты рождения
+            .GroupBy(d => GetAgeGroup(d.BirthDate))
             .ToDictionary(g => g.Key, g => g.Count());
     }
 
@@ -142,7 +155,7 @@ public class StatisticsService : IStatisticsService
     private static Dictionary<string, int> GetDoctorSpecializationDistribution(IEnumerable<DoctorDTO> doctors)
     {
         return doctors
-            .GroupBy(d => d.Specialization)
+            .GroupBy(d => d.SpecializationTitle)
             .ToDictionary(g => g.Key, g => g.Count());
     }
 
@@ -155,6 +168,7 @@ public class StatisticsService : IStatisticsService
                 g => g.Key,
                 g => Math.Round((double)g.Value / doctors.Count() * 100, 2));
     }
+
 
     //NOTE: Процент отменённых приёмов
     private static double GetCancellationRate(IEnumerable<AppointmentDTO> appointments, IEnumerable<DoctorDTO> doctors)

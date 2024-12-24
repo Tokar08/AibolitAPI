@@ -16,6 +16,7 @@ public class StatisticsDTO
     public int TotalPatients { get; set; }
 
     public Dictionary<string, int> PatientAgeGroups { get; set; }
+    public Dictionary<string, int> DoctorAgeGroups { get; set; }
     public Dictionary<string, int> DoctorSpecializationDistribution { get; set; }
     public Dictionary<string, double> PatientSpecializationPercentage { get; set; }
 

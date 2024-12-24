@@ -2,6 +2,7 @@ using AibolitAPI.Auth;
 using AibolitAPI.Data;
 using AibolitAPI.EmailManager;
 using AibolitAPI.Interfaces;
+using AibolitAPI.Interfaces.Services;
 using AibolitAPI.Mappers;
 using AibolitAPI.Middleware;
 using AibolitAPI.Repositories;
@@ -51,6 +52,8 @@ builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddHostedService<AppointmentReminderService>();
 builder.Services.AddHostedService<AppointmentSuccessCheckService>();
 
+builder.Services.AddScoped<ISpecializationRepository, SpecializationRepository>();
+builder.Services.AddScoped<ISpecializationService, SpecializationService>();
 
 builder.Services.AddScoped<IDoctorRepository, DoctorRepository>();
 builder.Services.AddScoped<IDoctorService, DoctorService>();

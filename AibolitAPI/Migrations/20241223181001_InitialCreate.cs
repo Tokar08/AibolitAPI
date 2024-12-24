@@ -38,6 +38,19 @@ namespace AibolitAPI.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Specializations",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Title = table.Column<string>(type: "text", nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Specializations", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "WorkSchedules",
                 columns: table => new
                 {
@@ -127,7 +140,7 @@ namespace AibolitAPI.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Specialization = table.Column<string>(type: "text", nullable: false),
+                    SpecializationId = table.Column<Guid>(type: "uuid", nullable: false),
                     WorkScheduleId = table.Column<Guid>(type: "uuid", nullable: false),
                     HospitalId = table.Column<Guid>(type: "uuid", nullable: false),
                     YearsOfExperience = table.Column<int>(type: "integer", nullable: false),
@@ -144,6 +157,12 @@ namespace AibolitAPI.Migrations
                         name: "FK_Doctors_Hospitals_HospitalId",
                         column: x => x.HospitalId,
                         principalTable: "Hospitals",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Doctors_Specializations_SpecializationId",
+                        column: x => x.SpecializationId,
+                        principalTable: "Specializations",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
@@ -397,6 +416,11 @@ namespace AibolitAPI.Migrations
                 column: "HospitalId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Doctors_SpecializationId",
+                table: "Doctors",
+                column: "SpecializationId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Doctors_UserId",
                 table: "Doctors",
                 column: "UserId");
@@ -503,6 +527,9 @@ namespace AibolitAPI.Migrations
 
             migrationBuilder.DropTable(
                 name: "Hospitals");
+
+            migrationBuilder.DropTable(
+                name: "Specializations");
 
             migrationBuilder.DropTable(
                 name: "Users");

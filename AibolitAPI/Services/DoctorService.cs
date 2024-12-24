@@ -16,7 +16,9 @@ public class DoctorService(
     IPrescriptionRepository prescriptionRepository,
     IAppointmentRepository appointmentRepository,
     INotificationSender notificationSender,
-    IEmailTemplateFactory templateFactory)
+    IEmailTemplateFactory templateFactory,
+    IUserRepository userRepository,
+    ISpecializationRepository specializationRepository)
     : IDoctorService
 {
     public async Task<IEnumerable<DoctorDTO>> GetAllAsync(int page, int size)
@@ -246,11 +248,49 @@ public class DoctorService(
     }
 
 
-    public async Task<string> CreateWithPhotoAsync(DoctorDTO doctorDto, Stream? photoStream, string? fileName)
+    public async Task CreateAsync(DoctorDTO doctorDto, string keycloakId, Stream? photoStream, string? fileName)
     {
+        await userRepository.BeginTransactionAsync();
         try
         {
-            var doctor = mapper.Map<Doctor>(doctorDto);
+            var newUserId = Guid.NewGuid();
+            var newDoctorId = Guid.NewGuid();
+
+            var defaultDoctorRole = await userRepository.GetRoleByNameAsync("Doctor");
+            if (defaultDoctorRole == null)
+                throw new Exception("Default doctor role not found.");
+
+            var newUser = new User
+            {
+                Id = newUserId,
+                KeycloakId = keycloakId,
+                RoleId = defaultDoctorRole.Id,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            await userRepository.CreateAsync(newUser);
+
+            var specialization =
+                await specializationRepository.GetByTitleAsync(doctorDto.SpecializationTitle);
+            if (specialization == null)
+                throw new Exception($"Specialization '{doctorDto.SpecializationTitle}' not found.");
+
+            var doctor = new Doctor
+            {
+                Id = newDoctorId,
+                UserId = newUserId,
+                SpecializationId = specialization.Id,
+                WorkScheduleId = doctorDto.WorkScheduleId,
+                HospitalId = doctorDto.HospitalId,
+                YearsOfExperience = doctorDto.YearsOfExperience,
+                Education = doctorDto.Education,
+                VisitCount = doctorDto.VisitCount,
+                IsActive = true,
+                Patients = new List<Patient>(),
+                LikedByPatients = new List<Patient>()
+            };
 
             if (photoStream != null && !string.IsNullOrWhiteSpace(fileName))
             {
@@ -259,43 +299,40 @@ public class DoctorService(
             }
 
             await doctorRepository.CreateAsync(doctor);
-            return doctor.PhotoUrl;
+
+            await userRepository.CommitTransactionAsync();
         }
-        catch (Exception ex)
+        catch
         {
-            logger.LogError(ex, "Error occurred while creating doctor.");
+            await userRepository.RollbackTransactionAsync();
             throw;
         }
     }
+
 
     public async Task<string> UpdateWithPhotoAsync(Guid id, DoctorDTO doctorDto, Stream? photoStream, string? fileName)
     {
         try
         {
-            var existingDoctor = await doctorRepository.GetByIdAsync(id);
-            if (existingDoctor == null)
-                throw new KeyNotFoundException($"Doctor with ID {id} not found.");
+            var existingDoctor = await doctorRepository.GetByIdAsync(id)
+                                 ?? throw new KeyNotFoundException($"Doctor with ID {id} not found.");
 
             var oldPhotoUrl = existingDoctor.PhotoUrl;
             mapper.Map(doctorDto, existingDoctor);
 
             if (photoStream != null && !string.IsNullOrWhiteSpace(fileName))
             {
-                if (!oldPhotoUrl.Contains(fileName))
-                {
-                    if (!string.IsNullOrWhiteSpace(oldPhotoUrl))
-                        await doctorRepository.DeletePhotoAsync(oldPhotoUrl);
+                if (!string.IsNullOrWhiteSpace(oldPhotoUrl))
+                    await doctorRepository.DeletePhotoAsync(oldPhotoUrl);
 
-                    var uploadedPhotoUrl = await doctorRepository.UploadPhotoAsync(photoStream, fileName);
-                    existingDoctor.PhotoUrl = uploadedPhotoUrl;
-                }
+                existingDoctor.PhotoUrl = await doctorRepository.UploadPhotoAsync(photoStream, fileName);
             }
-            else
-            {
-                existingDoctor.PhotoUrl = oldPhotoUrl;
-            }
+
+            if (string.IsNullOrWhiteSpace(existingDoctor.PhotoUrl))
+                throw new InvalidOperationException("Doctor photo cannot be empty.");
 
             await doctorRepository.UpdateAsync(existingDoctor);
+
             return existingDoctor.PhotoUrl;
         }
         catch (Exception ex)

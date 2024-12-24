@@ -27,6 +27,7 @@ public class MapperProfile : Profile
         CreateMap<Doctor, DoctorDTO>()
             .ForMember(dest => dest.Patients, opt => opt.MapFrom(src => src.Patients))
             .ForMember(dest => dest.LikedByPatients, opt => opt.MapFrom(src => src.LikedByPatients))
+            .ForMember(dest => dest.SpecializationTitle, opt => opt.MapFrom(src => src.Specialization.Title))
             .ReverseMap()
             .MaxDepth(2);
 
@@ -66,7 +67,13 @@ public class MapperProfile : Profile
             .MaxDepth(3);
 
         // Mapping for ScheduleAdjustment <-> ScheduleAdjustmentDTO
-        CreateMap<ScheduleAdjustment, ScheduleAdjustmentDTO>().ReverseMap()
+        CreateMap<ScheduleAdjustment, ScheduleAdjustmentDTO>()
+            .ReverseMap()
+            .MaxDepth(3);
+
+        // Mapping for Specialization <-> SpecializationDTO
+        CreateMap<Specialization, SpecializationDTO>()
+            .ReverseMap()
             .MaxDepth(3);
     }
 }

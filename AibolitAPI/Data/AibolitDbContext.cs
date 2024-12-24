@@ -22,6 +22,7 @@ public class AibolitDbContext : DbContext
     public DbSet<Prescription> Prescriptions { get; set; }
     public DbSet<Recommendation> Recommendations { get; set; }
     public DbSet<Appointment> Appointments { get; set; }
+    public DbSet<Specialization> Specializations { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -36,6 +37,12 @@ public class AibolitDbContext : DbContext
         // ---== Doctor ==---
         modelBuilder.Entity<Doctor>()
             .ToTable("Doctors");
+
+        modelBuilder.Entity<Doctor>()
+            .HasOne(d => d.Specialization)
+            .WithMany()
+            .HasForeignKey(d => d.SpecializationId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         modelBuilder.Entity<Doctor>()
             .HasOne(d => d.WorkSchedule)
@@ -173,5 +180,9 @@ public class AibolitDbContext : DbContext
         // Фильтр для активных корректировок расписания, связанных с активным расписанием работы
         modelBuilder.Entity<ScheduleAdjustment>()
             .HasQueryFilter(sa => sa.IsActive && sa.WorkSchedule.IsActive);
+
+        // Фильтр для активных специализаций врачей
+        modelBuilder.Entity<Specialization>()
+            .HasQueryFilter(s => s.IsActive);
     }
 }

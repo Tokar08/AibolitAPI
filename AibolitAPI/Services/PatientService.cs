@@ -1,5 +1,6 @@
 ﻿using AibolitAPI.DTOs;
 using AibolitAPI.Interfaces;
+using AibolitAPI.Interfaces.Services;
 using AibolitAPI.Models;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +18,8 @@ public class PatientService(
     IRecommendationRepository recommendationRepository,
     IPrescriptionRepository prescriptionRepository,
     INotificationSender notificationSender,
-    IEmailTemplateFactory templateFactory)
+    IEmailTemplateFactory templateFactory,
+    ISpecializationService specializationService)
     : IPatientService
 {
     public async Task<string> GetAllDoctorsAsyncWithSSO(int page, int pageSize)
@@ -64,8 +66,9 @@ public class PatientService(
             var dbDoctor = await GetDoctorAsync(doctorId);
 
             if (dbPatient.MedicalRecord.DoctorId == null
-                && dbDoctor.Specialization.Equals("Терапевт", StringComparison.OrdinalIgnoreCase))
+                && await specializationService.IsTherapistAsync(dbDoctor.SpecializationId))
                 await UpdatePatientDoctorAsync(dbPatient, doctorId);
+
             var appointment = await CreateAppointmentAsync(
                 patientId,
                 doctorId,
@@ -79,10 +82,6 @@ public class PatientService(
             await AddDoctorToPatientIfNeededAsync(dbPatient, dbDoctor);
 
             await SendAppointmentConfirmationAsync(patientDto, doctorDto, appointment);
-
-            logger.LogInformation(
-                $"Appointment successfully created for PatientId: {patientId}, " +
-                $"DoctorId: {doctorId}, at {appointmentDate:yyyy-MM-dd HH:mm}");
         }
         catch (Exception ex)
         {

@@ -5,7 +5,7 @@ public class DoctorDTO
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
 
-    public string Specialization { get; set; }
+    public string SpecializationTitle { get; set; }
     public Guid WorkScheduleId { get; set; }
 
     public Guid HospitalId { get; set; }

@@ -162,14 +162,14 @@ public class DoctorController(
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateAsync([FromBody] DoctorDTO doctorDto)
+    public async Task<IActionResult> CreateAsync([FromBody] DoctorDTO doctorDto, string keycloakId)
     {
         try
         {
             Stream? photoStream = null;
 
             var filePath = doctorDto.PhotoUrl;
-            if (!string.IsNullOrWhiteSpace(doctorDto.PhotoUrl))
+            if (!string.IsNullOrWhiteSpace(filePath))
             {
                 if (!System.IO.File.Exists(filePath))
                     return BadRequest(new { message = "File does not exist at the specified path." });
@@ -177,16 +177,17 @@ public class DoctorController(
                 photoStream = System.IO.File.OpenRead(filePath);
             }
 
-            await doctorService.CreateWithPhotoAsync(doctorDto, photoStream,
+            await doctorService.CreateAsync(doctorDto, keycloakId, photoStream,
                 photoStream != null ? Path.GetFileName(filePath) : null);
 
-            return Created($"api/Doctor/{doctorDto.Id}", new { message = "Doctor created successfully" });
+            return Created($"api/Doctor/{doctorDto.Id}", new { message = "Doctor created successfully." });
         }
         catch (Exception ex)
         {
             return BadRequest(new { message = ex.Message });
         }
     }
+
 
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> UpdateAsync(Guid id, [FromBody] DoctorDTO doctorDto)

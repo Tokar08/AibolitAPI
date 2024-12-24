@@ -2,7 +2,8 @@
 
 public class Doctor : HospitalStaff
 {
-    public string Specialization { get; set; }
+    public Guid SpecializationId { get; set; }
+    public virtual Specialization Specialization { get; set; }
     public Guid WorkScheduleId { get; set; }
     public virtual WorkSchedule WorkSchedule { get; set; }
 
