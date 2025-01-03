@@ -83,6 +83,7 @@ builder.Services.AddScoped<IWorkScheduleService, WorkScheduleService>();
 
 builder.Services.AddScoped<IStatisticsService, StatisticsService>();
 
+builder.Services.AddScoped<IFilterService, FilterService>();
 builder.Services.AddScoped<IRoleValidator, RoleValidator>();
 builder.Services.AddScoped<IKeycloakService, KeycloakService>();
 builder.Services.AddScoped<ITranslationService, GoogleTranslationService>();

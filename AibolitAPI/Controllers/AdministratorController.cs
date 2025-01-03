@@ -45,11 +45,11 @@ public class AdministratorController(IAdministratorService administratorService)
     }
 
     [HttpPost]
-    public async Task<ActionResult> CreateAsync([FromBody] AdministratorDTO administratorDto)
+    public async Task<ActionResult> CreateAsync([FromBody] AdministratorDTO administratorDto, string keycloakId)
     {
         try
         {
-            await administratorService.CreateAsync(administratorDto);
+            await administratorService.CreateAsync(administratorDto, keycloakId);
             return Created($"api/Administrator/{administratorDto.Id}", administratorDto);
         }
         catch (Exception ex)
@@ -57,6 +57,7 @@ public class AdministratorController(IAdministratorService administratorService)
             return BadRequest(new { message = ex.Message });
         }
     }
+
 
     [HttpPut("{id:guid}")]
     public async Task<ActionResult> UpdateAsync(Guid id, [FromBody] AdministratorDTO administratorDto)

@@ -1,5 +1,6 @@
 ﻿using AibolitAPI.DTOs;
 using AibolitAPI.Interfaces;
+using AibolitAPI.Interfaces.Services;
 using AibolitAPI.Models;
 using AutoMapper;
 using Newtonsoft.Json;
@@ -9,6 +10,7 @@ namespace AibolitAPI.Services;
 public class RecommendationService : IRecommendationService
 {
     private readonly IDoctorService _doctorService;
+    private readonly IFilterService _filterService;
     private readonly ILogger<RecommendationService> _logger;
     private readonly IMapper _mapper;
     private readonly IMedicalRecordRepository _medicalRecordRepository;
@@ -20,7 +22,8 @@ public class RecommendationService : IRecommendationService
     public RecommendationService(IRecommendationRepository recommendationRepository, IMapper mapper,
         ILogger<RecommendationService> logger,
         IMedicalRecordRepository medicalRecordRepository, IEmailTemplateFactory templateFactory,
-        IDoctorService doctorService, INotificationSender notificationSender, IPatientService patientService)
+        IDoctorService doctorService, INotificationSender notificationSender, IPatientService patientService,
+        IFilterService filterService)
     {
         _recommendationRepository = recommendationRepository;
         _mapper = mapper;
@@ -30,15 +33,19 @@ public class RecommendationService : IRecommendationService
         _doctorService = doctorService;
         _notificationSender = notificationSender;
         _patientService = patientService;
+        _filterService = filterService;
     }
 
-    public async Task<IEnumerable<RecommendationDTO>> GetAllAsync(int page, int size)
+    public async Task<IEnumerable<RecommendationDTO>> GetAllAsync(int page, int size,
+        RecommendationFilterDTO? filterDto)
     {
         try
         {
-            var recommendations = await _recommendationRepository.GetAllAsync(page, size
-            );
-            return _mapper.Map<IEnumerable<RecommendationDTO>>(recommendations);
+            var recommendations = await _recommendationRepository.GetAllAsync(page, size);
+            var recommendationDTOs = _mapper.Map<IEnumerable<RecommendationDTO>>(recommendations);
+            var filteredRecommendations = _filterService.ApplyRecommendationFilter(recommendationDTOs, filterDto);
+
+            return filteredRecommendations.ToList();
         }
         catch (Exception ex)
         {
@@ -47,12 +54,31 @@ public class RecommendationService : IRecommendationService
         }
     }
 
-    public async Task<RecommendationDTO> GetByIdAsync(Guid id)
+
+    public async Task<object> GetByIdAsync(Guid id)
     {
         try
         {
             var recommendation = await _recommendationRepository.GetByIdAsync(id);
-            return _mapper.Map<RecommendationDTO>(recommendation);
+
+            if (recommendation == null)
+                throw new KeyNotFoundException($"Recommendation with ID: {id} not found.");
+
+            var recommendationDTO = _mapper.Map<RecommendationDTO>(recommendation);
+
+            var doctorJson = await _doctorService.GetByIdAsync(recommendation.DoctorId);
+
+            var doctorDTO = JsonConvert.DeserializeObject<DoctorDTO>(doctorJson);
+            if (doctorDTO == null)
+                throw new Exception($"Doctor with ID: {recommendation.DoctorId} not found or invalid data.");
+
+            var result = new
+            {
+                Recommendation = recommendationDTO,
+                DoctorName = $"{doctorDTO.FirstName} {doctorDTO.LastName}"
+            };
+
+            return result;
         }
         catch (Exception ex)
         {
@@ -60,6 +86,7 @@ public class RecommendationService : IRecommendationService
             throw;
         }
     }
+
 
     public async Task UpdateAsync(RecommendationDTO recommendationDto)
     {

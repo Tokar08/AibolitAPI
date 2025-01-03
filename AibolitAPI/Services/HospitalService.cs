@@ -1,5 +1,6 @@
 ﻿using AibolitAPI.DTOs;
 using AibolitAPI.Interfaces;
+using AibolitAPI.Interfaces.Services;
 using AibolitAPI.Models;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +11,8 @@ public class HospitalService : IHospitalService
 {
     private readonly IAdministratorRepository _administratorRepository;
     private readonly IDoctorRepository _doctorRepository;
+    private readonly IDoctorService _doctorService;
+    private readonly IFilterService _filterService;
     private readonly IHospitalRepository _hospitalRepository;
     private readonly IKeycloakService _keycloakService;
     private readonly ILogger<HospitalService> _logger;
@@ -20,7 +23,7 @@ public class HospitalService : IHospitalService
     public HospitalService(IHospitalRepository hospitalRepository, IMapper mapper, ILogger<HospitalService> logger,
         IAdministratorRepository administratorRepository, IDoctorRepository doctorRepository,
         IKeycloakService keycloakService, IPatientRepository patientRepository,
-        IMedicalRecordRepository medicalRecordRepository)
+        IMedicalRecordRepository medicalRecordRepository, IDoctorService doctorService, IFilterService filterService)
     {
         _hospitalRepository = hospitalRepository;
         _mapper = mapper;
@@ -30,6 +33,8 @@ public class HospitalService : IHospitalService
         _keycloakService = keycloakService;
         _patientRepository = patientRepository;
         _medicalRecordRepository = medicalRecordRepository;
+        _doctorService = doctorService;
+        _filterService = filterService;
     }
 
     public async Task<string> GetAllHospitalsWithDetailsAsync(int page, int size)
@@ -45,15 +50,21 @@ public class HospitalService : IHospitalService
         return _keycloakService.Serialize(hospitalEntities);
     }
 
-    public async Task<string> GetDoctorsByHospitalIdAsync(Guid hospitalId, int page, int size)
+    public async Task<string> GetDoctorsByHospitalIdAsync(Guid hospitalId, DoctorFilterDTO? filterDto, int page,
+        int size)
     {
         var dbDoctors = await _doctorRepository.GetAllAsync(page, size, q => q.Where(d => d.HospitalId == hospitalId));
-        var doctorEntities =
-            await _keycloakService.GetEntitiesWithSSOAsync<DoctorDTO, Doctor>(dbDoctors,
-                doctor => doctor.User.KeycloakId.ToString());
 
-        return _keycloakService.Serialize(doctorEntities.Where(d => d.IsActive));
+        var doctorEntities = await _keycloakService.GetEntitiesWithSSOAsync<DoctorDTO, Doctor>(
+            dbDoctors,
+            doctor => doctor.User.KeycloakId.ToString()
+        );
+
+        var filteredDoctors = _filterService.ApplyDoctorFilter(doctorEntities, filterDto, dbDoctors);
+
+        return _keycloakService.Serialize(filteredDoctors.Where(d => d.IsActive));
     }
+
 
     public async Task<string> GetDoctorWithPatientsAsync(Guid hospitalId, Guid doctorId, int page, int size)
     {
@@ -68,24 +79,26 @@ public class HospitalService : IHospitalService
         return _keycloakService.Serialize(doctorEntity);
     }
 
-    public async Task<string> GetPatientsForDoctorAsync(Guid hospitalId, Guid doctorId, int page, int size)
+    public async Task<string> GetPatientsForDoctorAsync(Guid hospitalId, Guid doctorId, int page, int size,
+        PatientFilterDTO? filterDto)
     {
         var doctor = await _doctorRepository.GetByIdAsync(doctorId);
         if (doctor == null || doctor.HospitalId != hospitalId)
             throw new KeyNotFoundException($"Doctor with ID: {doctorId} in Hospital with ID: {hospitalId} not found.");
 
-
-        var patients = doctor.Patients.Where(p => p.Doctors.Any(d => d.Id == doctorId)).Skip((page - 1) * size)
-            .Take(size).ToList();
+        var patients = doctor.Patients
+            .Where(p => p.Doctors.Any(d => d.Id == doctorId))
+            .Skip((page - 1) * size)
+            .Take(size)
+            .ToList();
 
         var patientEntities = await _keycloakService.GetEntitiesWithSSOAsync<PatientDTO, Patient>(
             patients,
             patient => patient.User.KeycloakId.ToString()
         );
 
-        var patientDTOs = patientEntities.ToList();
-
-        return _keycloakService.Serialize(patientDTOs);
+        var filteredPatients = _filterService.ApplyPatientFilter(patientEntities, filterDto);
+        return _keycloakService.Serialize(filteredPatients.ToList());
     }
 
 
@@ -106,8 +119,11 @@ public class HospitalService : IHospitalService
         return _keycloakService.Serialize(patientEntity);
     }
 
-    public async Task<IEnumerable<PrescriptionDTO>> GetPatientPrescriptionsAsync(Guid hospitalId, Guid doctorId,
-        Guid patientId)
+    public async Task<IEnumerable<PrescriptionDTO>> GetPatientPrescriptionsAsync(
+        Guid hospitalId,
+        Guid doctorId,
+        Guid patientId,
+        PrescriptionFilterDTO? filterDto)
     {
         var doctor = await _doctorRepository.GetByIdAsync(doctorId);
         if (doctor == null || doctor.HospitalId != hospitalId)
@@ -123,11 +139,19 @@ public class HospitalService : IHospitalService
             throw new KeyNotFoundException($"Medical record for Patient with ID: {patientId} not found.");
 
         var prescriptions = medicalRecord.Prescriptions.Where(p => p.IsActive).ToList();
-        return _mapper.Map<IEnumerable<PrescriptionDTO>>(prescriptions);
+        var prescriptionDTOs = _mapper.Map<IEnumerable<PrescriptionDTO>>(prescriptions);
+
+        var filteredPrescriptions = _filterService.ApplyPrescriptionFilter(prescriptionDTOs, filterDto);
+
+        return filteredPrescriptions;
     }
 
-    public async Task<IEnumerable<RecommendationDTO>> GetPatientRecommendationsAsync(Guid hospitalId, Guid doctorId,
-        Guid patientId)
+
+    public async Task<IEnumerable<RecommendationDTO>> GetPatientRecommendationsAsync(
+        Guid hospitalId,
+        Guid doctorId,
+        Guid patientId,
+        RecommendationFilterDTO? filterDto)
     {
         var doctor = await _doctorRepository.GetByIdAsync(doctorId);
         if (doctor == null || doctor.HospitalId != hospitalId)
@@ -143,7 +167,11 @@ public class HospitalService : IHospitalService
             throw new KeyNotFoundException($"Medical record for Patient with ID: {patientId} not found.");
 
         var recommendations = medicalRecord.Recommendations.Where(r => r.IsActive).ToList();
-        return _mapper.Map<IEnumerable<RecommendationDTO>>(recommendations);
+        var recommendationDTOs = _mapper.Map<IEnumerable<RecommendationDTO>>(recommendations);
+
+        var filteredRecommendations = _filterService.ApplyRecommendationFilter(recommendationDTOs, filterDto);
+
+        return filteredRecommendations;
     }
 
 

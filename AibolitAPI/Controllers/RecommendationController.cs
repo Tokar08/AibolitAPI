@@ -9,11 +9,14 @@ namespace AibolitAPI.Controllers;
 public class RecommendationController(IRecommendationService recommendationService) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<RecommendationDTO>>> GetAllAsync(int page = 1, int size = 10)
+    public async Task<ActionResult<IEnumerable<RecommendationDTO>>> GetAllAsync(
+        [FromQuery] RecommendationFilterDTO? filterDto,
+        int page = 1,
+        int size = 10)
     {
         try
         {
-            var recommendations = await recommendationService.GetAllAsync(page, size);
+            var recommendations = await recommendationService.GetAllAsync(page, size, filterDto);
             return Ok(recommendations);
         }
         catch (Exception ex)
@@ -21,6 +24,7 @@ public class RecommendationController(IRecommendationService recommendationServi
             return BadRequest(new { message = ex.Message });
         }
     }
+
 
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<RecommendationDTO>> GetByIdAsync(Guid id)

@@ -1,5 +1,6 @@
 ﻿using AibolitAPI.DTOs;
 using AibolitAPI.Interfaces;
+using AibolitAPI.Interfaces.Services;
 using AibolitAPI.Models;
 using AutoMapper;
 using Newtonsoft.Json;
@@ -10,6 +11,7 @@ public class AppointmentService : IAppointmentService
 {
     private readonly IAppointmentRepository _appointmentRepository;
     private readonly IDoctorService _doctorService;
+    private readonly IFilterService _filterService;
     private readonly ILogger<AppointmentService> _logger;
     private readonly IMapper _mapper;
     private readonly INotificationSender _notificationSender;
@@ -18,7 +20,7 @@ public class AppointmentService : IAppointmentService
 
     public AppointmentService(IAppointmentRepository appointmentRepository, IMapper mapper,
         ILogger<AppointmentService> logger, IPatientService patientService, INotificationSender notificationSender,
-        IEmailTemplateFactory templateFactory, IDoctorService doctorService)
+        IEmailTemplateFactory templateFactory, IDoctorService doctorService, IFilterService filterService)
     {
         _appointmentRepository = appointmentRepository;
         _mapper = mapper;
@@ -27,16 +29,18 @@ public class AppointmentService : IAppointmentService
         _notificationSender = notificationSender;
         _templateFactory = templateFactory;
         _doctorService = doctorService;
+        _filterService = filterService;
     }
 
-    public async Task<IEnumerable<AppointmentDTO>> GetAllAsync(int page, int size)
+    public async Task<IEnumerable<AppointmentDTO>> GetAllAsync(AppointmentFilterDTO? filterDto, int page, int size)
     {
         try
         {
-            var appointments = await _appointmentRepository.GetAllAsync(page, size
-            );
+            var appointments = await _appointmentRepository.GetAllAsync(page, size);
+            var appointmentDTOs = _mapper.Map<IEnumerable<AppointmentDTO>>(appointments);
+            var filteredAppointments = _filterService.ApplyAppointmentFilter(appointmentDTOs, filterDto);
 
-            return _mapper.Map<IEnumerable<AppointmentDTO>>(appointments);
+            return filteredAppointments;
         }
         catch (Exception ex)
         {

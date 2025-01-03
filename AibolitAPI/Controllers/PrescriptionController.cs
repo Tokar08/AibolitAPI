@@ -9,11 +9,12 @@ namespace AibolitAPI.Controllers;
 public class PrescriptionController(IPrescriptionService prescriptionService) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<PrescriptionDTO>>> GetAllAsync(int page = 1, int size = 10)
+    public async Task<ActionResult<IEnumerable<PrescriptionDTO>>> GetAllAsync(
+        [FromQuery] PrescriptionFilterDTO? filterDto, int page = 1, int size = 10)
     {
         try
         {
-            var prescriptions = await prescriptionService.GetAllAsync(page, size);
+            var prescriptions = await prescriptionService.GetAllAsync(page, size, filterDto);
             return Ok(prescriptions);
         }
         catch (Exception ex)
@@ -21,6 +22,7 @@ public class PrescriptionController(IPrescriptionService prescriptionService) : 
             return BadRequest(new { message = ex.Message });
         }
     }
+
 
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<PrescriptionDTO>> GetByIdAsync(Guid id)

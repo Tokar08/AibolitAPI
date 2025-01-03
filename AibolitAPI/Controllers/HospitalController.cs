@@ -45,22 +45,20 @@ public class HospitalController(IHospitalService hospitalService) : ControllerBa
     }
 
     [HttpGet("{hospitalId:guid}/doctors")]
-    public async Task<ActionResult<string>> GetDoctors(Guid hospitalId, int page = 1, int size = 10)
+    public async Task<ActionResult<string>> GetDoctors(Guid hospitalId, [FromQuery] DoctorFilterDTO? filterDto,
+        int page = 1, int size = 10)
     {
         try
         {
-            var doctors = await hospitalService.GetDoctorsByHospitalIdAsync(hospitalId, page, size);
-            return new ContentResult
-            {
-                Content = doctors,
-                ContentType = "application/json"
-            };
+            var doctors = await hospitalService.GetDoctorsByHospitalIdAsync(hospitalId, filterDto, page, size);
+            return Content(doctors, "application/json");
         }
         catch (Exception ex)
         {
             return BadRequest(new { message = ex.Message });
         }
     }
+
 
     [HttpGet("{hospitalId:guid}/doctors/{doctorId:guid}")]
     public async Task<ActionResult<string>> GetDoctorWithPatients(Guid hospitalId, Guid doctorId, int page = 1,
@@ -69,11 +67,7 @@ public class HospitalController(IHospitalService hospitalService) : ControllerBa
         try
         {
             var doctorWithPatients = await hospitalService.GetDoctorWithPatientsAsync(hospitalId, doctorId, page, size);
-            return new ContentResult
-            {
-                Content = doctorWithPatients,
-                ContentType = "application/json"
-            };
+            return Content(doctorWithPatients, "application/json");
         }
         catch (Exception ex)
         {
@@ -83,11 +77,13 @@ public class HospitalController(IHospitalService hospitalService) : ControllerBa
 
     [HttpGet("{hospitalId:guid}/doctors/{doctorId:guid}/patients")]
     public async Task<ActionResult<IEnumerable<PatientDTO>>> GetPatientsForDoctor(Guid hospitalId, Guid doctorId,
-        int page = 1, int size = 10)
+        [FromQuery] PatientFilterDTO? filterDto,
+        int page = 1,
+        int size = 10)
     {
         try
         {
-            var patients = await hospitalService.GetPatientsForDoctorAsync(hospitalId, doctorId, page, size);
+            var patients = await hospitalService.GetPatientsForDoctorAsync(hospitalId, doctorId, page, size, filterDto);
             return new ContentResult
             {
                 Content = patients,
@@ -99,6 +95,7 @@ public class HospitalController(IHospitalService hospitalService) : ControllerBa
             return BadRequest(new { message = ex.Message });
         }
     }
+
 
     [HttpGet("{hospitalId:guid}/doctors/{doctorId:guid}/patients/{patientId:guid}")]
     public async Task<ActionResult<string>> GetPatientInfo(Guid hospitalId, Guid doctorId, Guid patientId)
@@ -120,13 +117,17 @@ public class HospitalController(IHospitalService hospitalService) : ControllerBa
 
 
     [HttpGet("{hospitalId:guid}/doctors/{doctorId:guid}/patients/{patientId:guid}/recommendations")]
-    public async Task<ActionResult<IEnumerable<RecommendationDTO>>> GetPatientRecommendations(Guid hospitalId,
-        Guid doctorId, Guid patientId)
+    public async Task<ActionResult<IEnumerable<RecommendationDTO>>> GetPatientRecommendations(
+        Guid hospitalId,
+        Guid doctorId,
+        Guid patientId,
+        [FromQuery] RecommendationFilterDTO? filterDto)
     {
         try
         {
-            var patientRecommendations =
-                await hospitalService.GetPatientRecommendationsAsync(hospitalId, doctorId, patientId);
+            var patientRecommendations = await hospitalService.GetPatientRecommendationsAsync(
+                hospitalId, doctorId, patientId, filterDto);
+
             return Ok(patientRecommendations);
         }
         catch (Exception ex)
@@ -135,14 +136,17 @@ public class HospitalController(IHospitalService hospitalService) : ControllerBa
         }
     }
 
+
     [HttpGet("{hospitalId:guid}/doctors/{doctorId:guid}/patients/{patientId:guid}/prescriptions")]
-    public async Task<ActionResult<IEnumerable<PrescriptionDTO>>> GetPatientPrescriptions(Guid hospitalId,
-        Guid doctorId, Guid patientId)
+    public async Task<ActionResult<IEnumerable<PrescriptionDTO>>> GetPatientPrescriptions(
+        Guid hospitalId, 
+        Guid doctorId, 
+        Guid patientId, 
+        [FromQuery] PrescriptionFilterDTO? filterDto)
     {
         try
         {
-            var patientPrescriptions =
-                await hospitalService.GetPatientPrescriptionsAsync(hospitalId, doctorId, patientId);
+            var patientPrescriptions = await hospitalService.GetPatientPrescriptionsAsync(hospitalId, doctorId, patientId, filterDto);
             return Ok(patientPrescriptions);
         }
         catch (Exception ex)
@@ -150,6 +154,7 @@ public class HospitalController(IHospitalService hospitalService) : ControllerBa
             return BadRequest(new { message = ex.Message });
         }
     }
+
 
     [HttpGet(
         "{hospitalId:guid}/doctors/{doctorId:guid}/patients/{patientId:guid}/recommendations/{recommendationId:guid}")]

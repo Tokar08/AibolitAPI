@@ -19,21 +19,24 @@ public class PatientService(
     IPrescriptionRepository prescriptionRepository,
     INotificationSender notificationSender,
     IEmailTemplateFactory templateFactory,
-    ISpecializationService specializationService)
+    ISpecializationService specializationService,
+    IFilterService filterService,
+    IWorkScheduleRepository workScheduleRepository)
     : IPatientService
 {
-    public async Task<string> GetAllDoctorsAsyncWithSSO(int page, int pageSize)
+    public async Task<string> GetAllDoctorsAsyncWithSSO(DoctorFilterDTO? filterDto, int page, int pageSize)
     {
         try
         {
-            var doctors = await doctorRepository.GetAllAsync(page, pageSize);
+            var dbDoctors = await doctorRepository.GetAllAsync(page, pageSize);
 
             var doctorEntities = await keycloakService.GetEntitiesWithSSOAsync<DoctorDTO, Doctor>(
-                doctors,
+                dbDoctors,
                 doctor => doctor.User.KeycloakId.ToString()
             );
 
-            return keycloakService.Serialize(doctorEntities.Where(d => d.IsActive).ToList());
+            var filteredDoctors = filterService.ApplyDoctorFilter(doctorEntities, filterDto, dbDoctors);
+            return keycloakService.Serialize(filteredDoctors.Where(d => d.IsActive).ToList());
         }
         catch (Exception ex)
         {
@@ -41,22 +44,26 @@ public class PatientService(
         }
     }
 
-    public async Task<string> GetAllAppointmentsAsync(Guid patientId, int page, int size)
+
+    public async Task<string> GetAllAppointmentsAsync(
+        Guid patientId,
+        AppointmentFilterDTO? filterDto,
+        int page,
+        int size)
     {
         var appointments = await appointmentRepository.GetAppointmentsByPatientIdAsync(patientId);
 
-        var pagedAppointments = appointments
+        var appointmentDTOs = mapper.Map<List<AppointmentDTO>>(appointments);
+
+        var filteredAppointments = filterService
+            .ApplyAppointmentFilter(appointmentDTOs, filterDto)
             .Skip((page - 1) * size)
             .Take(size)
             .ToList();
 
-        var appointmentEntities = await keycloakService.GetEntitiesWithSSOAsync<AppointmentDTO, Appointment>(
-            pagedAppointments,
-            appointment => appointment.Doctor.User.KeycloakId.ToString()
-        );
-
-        return keycloakService.Serialize(appointmentEntities.ToList());
+        return keycloakService.Serialize(filteredAppointments);
     }
+
 
     public async Task CreateAppointmentAsync(Guid doctorId, Guid patientId, DateTime appointmentDate)
     {
@@ -89,7 +96,6 @@ public class PatientService(
             throw new Exception("Error occurred while processing the appointment.", ex);
         }
     }
-
 
     public async Task AddDoctorToFavoritesAsync(Guid patientId, Guid doctorId)
     {
@@ -124,7 +130,8 @@ public class PatientService(
         await patientRepository.UpdateAsync(patient);
     }
 
-    public async Task<string> GetFavoriteDoctorsWithSSOAsync(Guid patientId, int page, int size)
+    public async Task<string> GetFavoriteDoctorsWithSSOAsync(Guid patientId, DoctorFilterDTO? filterDto, int page,
+        int size)
     {
         var patient = await patientRepository.GetByIdAsync(patientId);
 
@@ -141,20 +148,24 @@ public class PatientService(
             doctor => doctor.User.KeycloakId.ToString()
         );
 
-        return keycloakService.Serialize(doctorEntities.ToList());
+        var filteredDoctors = filterService.ApplyDoctorFilter(doctorEntities, filterDto, likedDoctors);
+        return keycloakService.Serialize(filteredDoctors.ToList());
     }
 
-    public async Task<string> GetPrescriptionsForPatientAsync(Guid patientId)
+
+    public async Task<string> GetPrescriptionsForPatientAsync(Guid patientId, PrescriptionFilterDTO? filterDto)
     {
         var medicalRecord = await medicalRecordRepository.GetByPatientIdAsync(patientId);
-
         if (medicalRecord == null)
             throw new KeyNotFoundException("No prescriptions found for this patient.");
 
         var prescriptions = medicalRecord.Prescriptions.Where(p => p.IsActive).ToList();
+        var prescriptionDTOs = mapper.Map<IEnumerable<PrescriptionDTO>>(prescriptions);
+        var filteredPrescriptions = filterService.ApplyPrescriptionFilter(prescriptionDTOs, filterDto);
 
-        return keycloakService.Serialize(prescriptions);
+        return keycloakService.Serialize(filteredPrescriptions);
     }
+
 
     public async Task<object> GetPrescriptionByIdWithDoctorAsync(Guid patientId, Guid prescriptionId)
     {
@@ -195,7 +206,7 @@ public class PatientService(
     }
 
 
-    public async Task<string> GetRecommendationsForPatientAsync(Guid patientId)
+    public async Task<string> GetRecommendationsForPatientAsync(Guid patientId, RecommendationFilterDTO? filterDto)
     {
         var medicalRecord = await medicalRecordRepository.GetByPatientIdAsync(patientId);
 
@@ -203,9 +214,13 @@ public class PatientService(
             throw new KeyNotFoundException("No recommendations found for this patient.");
 
         var recommendations = medicalRecord.Recommendations.Where(r => r.IsActive).ToList();
+        var recommendationDTOs = mapper.Map<IEnumerable<RecommendationDTO>>(recommendations);
 
-        return keycloakService.Serialize(recommendations);
+        var filteredRecommendations = filterService.ApplyRecommendationFilter(recommendationDTOs, filterDto);
+
+        return keycloakService.Serialize(filteredRecommendations);
     }
+
 
     public async Task<object> GetRecommendationByIdWithDoctorAsync(Guid patientId, Guid recommendationId)
     {
@@ -270,7 +285,7 @@ public class PatientService(
         await SendCancellationNotificationAsync(doctor, patient, appointment);
     }
 
-    public async Task<string> GetAllPatientsWithSSOAsync(int page, int size)
+    public async Task<string> GetAllPatientsWithSSOAsync(int page, int size, PatientFilterDTO? filterDto = null)
     {
         var dbPatients = await patientRepository.GetAllAsync(page, size);
         var patientEntities = await keycloakService.GetEntitiesWithSSOAsync<PatientDTO, Patient>(
@@ -279,6 +294,8 @@ public class PatientService(
         );
 
         foreach (var patient in patientEntities) await UpdateDoctorsForPatient(patient, page, size);
+
+        patientEntities = filterService.ApplyPatientFilter(patientEntities, filterDto);
 
         return keycloakService.Serialize(patientEntities);
     }
@@ -374,6 +391,48 @@ public class PatientService(
             throw;
         }
     }
+
+    public async Task<IEnumerable<object>> GetAvailableSlotsAsync(Guid doctorId, DateTime date)
+    {
+        var schedules = await workScheduleRepository.GetSchedulesForDoctorAsync(doctorId, date.DayOfWeek);
+
+        var appointments = await appointmentRepository.GetAllAsync(1, int.MaxValue);
+        var appointmentsForDate = appointments
+            .Where(a => a.DoctorId == doctorId && a.AppointmentDate.Date == date.Date && a.IsScheduled)
+            .ToList();
+
+        var kievTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Kiev");
+
+        var slots = new List<object>();
+
+        foreach (var schedule in schedules)
+        {
+            var currentTimeUtc = date.Date + schedule.StartTime;
+            while (currentTimeUtc < date.Date + schedule.EndTime)
+            {
+                var endTimeUtc = currentTimeUtc.Add(TimeSpan.FromMinutes(20));
+
+                var localStartTime = TimeZoneInfo.ConvertTimeFromUtc(currentTimeUtc, kievTimeZone);
+                var localEndTime = TimeZoneInfo.ConvertTimeFromUtc(endTimeUtc, kievTimeZone);
+
+                var isOccupied = appointmentsForDate.Any(a =>
+                    a.AppointmentDate >= currentTimeUtc &&
+                    a.AppointmentDate < endTimeUtc);
+
+                slots.Add(new
+                {
+                    StartTime = localStartTime.ToString("HH:mm"),
+                    EndTime = localEndTime.ToString("HH:mm"),
+                    IsOccupied = isOccupied
+                });
+
+                currentTimeUtc = endTimeUtc;
+            }
+        }
+
+        return slots;
+    }
+
 
     private async Task<Patient> GetPatientAsync(Guid patientId)
     {

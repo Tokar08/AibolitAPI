@@ -21,7 +21,7 @@ public class StatisticsService : IStatisticsService
     public async Task<StatisticsDTO> GetStatisticsAsync(Guid hospitalId)
     {
         var patientsJson = await patientService.GetAllPatientsWithSSOAsync(1, int.MaxValue);
-        var appointments = await appointmentService.GetAllAsync(1, int.MaxValue);
+        var appointments = await appointmentService.GetAllAsync(null, 1, int.MaxValue);
         var hospitalsJson = await hospitalService.GetAllHospitalsWithDetailsAsync(1, int.MaxValue);
 
         var hospital = JsonConvert.DeserializeObject<List<HospitalDTO>>(hospitalsJson)
@@ -146,7 +146,7 @@ public class StatisticsService : IStatisticsService
     private static Dictionary<string, int> GetDoctorAgeGroups(IEnumerable<DoctorDTO> doctors)
     {
         return doctors
-            .Where(d => !string.IsNullOrWhiteSpace(d.BirthDate)) // Проверяем наличие даты рождения
+            .Where(d => !string.IsNullOrWhiteSpace(d.BirthDate))
             .GroupBy(d => GetAgeGroup(d.BirthDate))
             .ToDictionary(g => g.Key, g => g.Count());
     }

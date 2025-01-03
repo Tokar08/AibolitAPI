@@ -1,5 +1,6 @@
 ﻿using AibolitAPI.DTOs;
 using AibolitAPI.Interfaces;
+using AibolitAPI.Interfaces.Services;
 using AibolitAPI.Models;
 using AutoMapper;
 using Newtonsoft.Json;
@@ -9,6 +10,7 @@ namespace AibolitAPI.Services;
 public class PrescriptionService : IPrescriptionService
 {
     private readonly IDoctorService _doctorService;
+    private readonly IFilterService _filterService;
     private readonly ILogger<PrescriptionService> _logger;
     private readonly IMapper _mapper;
     private readonly IMedicalRecordRepository _medicalRecordRepository;
@@ -20,7 +22,7 @@ public class PrescriptionService : IPrescriptionService
     public PrescriptionService(IPrescriptionRepository prescriptionRepository, IMapper mapper,
         ILogger<PrescriptionService> logger, IPatientService patientService,
         IMedicalRecordRepository medicalRecordRepository, IDoctorService doctorService,
-        INotificationSender notificationSender, IEmailTemplateFactory templateFactory)
+        INotificationSender notificationSender, IEmailTemplateFactory templateFactory, IFilterService filterService)
     {
         _prescriptionRepository = prescriptionRepository;
         _mapper = mapper;
@@ -30,15 +32,18 @@ public class PrescriptionService : IPrescriptionService
         _doctorService = doctorService;
         _notificationSender = notificationSender;
         _templateFactory = templateFactory;
+        _filterService = filterService;
     }
 
-    public async Task<IEnumerable<PrescriptionDTO>> GetAllAsync(int page, int size)
+    public async Task<IEnumerable<PrescriptionDTO>> GetAllAsync(int page, int size, PrescriptionFilterDTO? filterDto)
     {
         try
         {
-            var prescriptions = await _prescriptionRepository.GetAllAsync(page, size
-            );
-            return _mapper.Map<IEnumerable<PrescriptionDTO>>(prescriptions);
+            var prescriptions = await _prescriptionRepository.GetAllAsync(page, size);
+            var prescriptionDTOs = _mapper.Map<IEnumerable<PrescriptionDTO>>(prescriptions);
+            var filteredPrescriptions = _filterService.ApplyPrescriptionFilter(prescriptionDTOs, filterDto);
+
+            return filteredPrescriptions;
         }
         catch (Exception ex)
         {
@@ -47,12 +52,31 @@ public class PrescriptionService : IPrescriptionService
         }
     }
 
-    public async Task<PrescriptionDTO> GetByIdAsync(Guid id)
+
+    public async Task<object> GetByIdAsync(Guid id)
     {
         try
         {
             var prescription = await _prescriptionRepository.GetByIdAsync(id);
-            return _mapper.Map<PrescriptionDTO>(prescription);
+
+            if (prescription == null)
+                throw new KeyNotFoundException($"Prescription with ID: {id} not found.");
+
+            var prescriptionDTO = _mapper.Map<PrescriptionDTO>(prescription);
+
+            var doctorJson = await _doctorService.GetByIdAsync(prescription.DoctorId);
+            var doctorDTO = JsonConvert.DeserializeObject<DoctorDTO>(doctorJson);
+
+            if (doctorDTO == null)
+                throw new Exception($"Doctor with ID: {prescription.DoctorId} not found or invalid data.");
+
+            var result = new
+            {
+                Prescription = prescriptionDTO,
+                DoctorName = $"{doctorDTO.FirstName} {doctorDTO.LastName}"
+            };
+
+            return result;
         }
         catch (Exception ex)
         {
@@ -60,6 +84,7 @@ public class PrescriptionService : IPrescriptionService
             throw;
         }
     }
+
 
     public async Task CreateAsync(Guid doctorId, Guid patientId, PrescriptionDTO prescriptionDto)
     {

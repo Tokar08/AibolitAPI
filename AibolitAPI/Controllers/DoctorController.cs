@@ -12,11 +12,14 @@ public class DoctorController(
     IPrescriptionService prescriptionService) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<DoctorDTO>>> GetAllAsync(int page = 1, int size = 10)
+    public async Task<ActionResult<IEnumerable<DoctorDTO>>> GetAllAsync(
+        int page = 1,
+        int size = 10,
+        [FromQuery] DoctorFilterDTO? filter = null)
     {
         try
         {
-            var doctors = await doctorService.GetAllDoctorsWithSSOAsync(page, size);
+            var doctors = await doctorService.GetAllDoctorsWithSSOAsync(page, size, filter);
             return Content(doctors, "application/json");
         }
         catch (Exception ex)
@@ -24,6 +27,7 @@ public class DoctorController(
             return BadRequest(new { message = ex.Message });
         }
     }
+
 
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<DoctorDTO>> GetByIdAsync(Guid id)
@@ -40,11 +44,12 @@ public class DoctorController(
     }
 
     [HttpGet("{doctorId:guid}/patients")]
-    public async Task<IActionResult> GetPatientsForDoctor(Guid doctorId, int page = 1, int size = 10)
+    public async Task<IActionResult> GetPatientsForDoctor(Guid doctorId, int page = 1, int size = 10,
+        [FromQuery] PatientFilterDTO? filterDto = null)
     {
         try
         {
-            var patients = await doctorService.GetPatientsForDoctorAsync(doctorId, page, size);
+            var patients = await doctorService.GetPatientsForDoctorAsync(doctorId, page, size, filterDto);
             return Content(patients, "application/json");
         }
         catch (Exception ex)
@@ -52,6 +57,7 @@ public class DoctorController(
             return BadRequest(new { message = ex.Message });
         }
     }
+
 
     [HttpGet("{doctorId:guid}/patients/{patientId:guid}")]
     public async Task<IActionResult> GetPatientById(Guid doctorId, Guid patientId)
@@ -69,11 +75,12 @@ public class DoctorController(
     }
 
     [HttpGet("{doctorId:guid}/patients/{patientId:guid}/prescriptions")]
-    public async Task<IActionResult> GetPrescriptionsForPatient(Guid doctorId, Guid patientId)
+    public async Task<IActionResult> GetPrescriptionsForPatient(Guid doctorId, Guid patientId,
+        [FromQuery] PrescriptionFilterDTO? filterDto)
     {
         try
         {
-            var prescriptions = await doctorService.GetPrescriptionsForPatientAsync(doctorId, patientId);
+            var prescriptions = await doctorService.GetPrescriptionsForPatientAsync(doctorId, patientId, filterDto);
             return Content(prescriptions, "application/json");
         }
         catch (Exception ex)
@@ -82,13 +89,14 @@ public class DoctorController(
         }
     }
 
+
     [HttpGet("{doctorId:guid}/patients/{patientId:guid}/recommendations")]
-    public async Task<IActionResult> GetRecommendationsForPatient(Guid doctorId, Guid patientId)
+    public async Task<IActionResult> GetRecommendationsForPatient(Guid doctorId, Guid patientId,
+        [FromQuery] RecommendationFilterDTO? filterDto)
     {
         try
         {
-            var recommendations = await doctorService.GetRecommendationsForPatientAsync(doctorId, patientId);
-
+            var recommendations = await doctorService.GetRecommendationsForPatientAsync(doctorId, patientId, filterDto);
             return Content(recommendations, "application/json");
         }
         catch (Exception ex)
@@ -96,6 +104,7 @@ public class DoctorController(
             return BadRequest(new { message = ex.Message });
         }
     }
+
 
     [HttpGet("{doctorId:guid}/patients/{patientId:guid}/prescriptions/{prescriptionId:guid}")]
     public async Task<IActionResult> GetPatientPrescriptionById(Guid doctorId, Guid patientId, Guid prescriptionId)
@@ -128,15 +137,25 @@ public class DoctorController(
     }
 
     [HttpGet("{doctorId:guid}/appointments")]
-    public async Task<IActionResult> GetScheduledAppointmentsAsync(Guid doctorId)
+    public async Task<IActionResult> GetScheduledAppointmentsAsync(Guid doctorId,
+        [FromQuery] AppointmentFilterDTO filterDto, int page = 1, int size = 10)
     {
-        var scheduledAppointments = await doctorService.GetScheduledAppointmentsByDoctorIdAsync(doctorId);
+        try
+        {
+            var filteredAppointments =
+                await doctorService.GetScheduledAppointmentsByDoctorIdAsync(doctorId, filterDto, page, size);
 
-        if (!scheduledAppointments.Any())
-            return NotFound("No scheduled appointments found for the specified doctor.");
+            if (!filteredAppointments.Any())
+                return NotFound("No appointments found for the specified doctor with the given filters.");
 
-        return Ok(scheduledAppointments);
+            return Ok(filteredAppointments);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
+
 
     [HttpDelete("{doctorId:guid}/appointments/{appointmentId:guid}/cancel")]
     public async Task<IActionResult> CancelAppointmentAsync(Guid doctorId, Guid appointmentId)

@@ -5,137 +5,126 @@ using AutoMapper;
 
 namespace AibolitAPI.Services;
 
-public class AdministratorService : IAdministratorService
+public class AdministratorService(
+    IAdministratorRepository administratorRepository,
+    IDoctorRepository doctorRepository,
+    IHospitalRepository hospitalRepository,
+    IMapper mapper,
+    ILogger<AdministratorService> logger,
+    IKeycloakService keycloakService,
+    IPatientRepository patientRepository,
+    IUserRepository userRepository)
+    : IAdministratorService
 {
-    private readonly IAdministratorRepository _administratorRepository;
-    private readonly IDoctorRepository _doctorRepository;
-    private readonly IHospitalRepository _hospitalRepository;
-    private readonly IKeycloakService _keycloakService;
-    private readonly ILogger<AdministratorService> _logger;
-    private readonly IMapper _mapper;
-    private readonly IPatientRepository _patientRepository;
-
-    public AdministratorService(IAdministratorRepository administratorRepository, IDoctorRepository doctorRepository,
-        IHospitalRepository hospitalRepository,
-        IMapper mapper, ILogger<AdministratorService> logger, IKeycloakService keycloakService,
-        IPatientRepository patientRepository)
-    {
-        _administratorRepository = administratorRepository;
-        _doctorRepository = doctorRepository;
-        _hospitalRepository = hospitalRepository;
-        _mapper = mapper;
-        _logger = logger;
-        _keycloakService = keycloakService;
-        _patientRepository = patientRepository;
-    }
-
+  
     public async Task<IEnumerable<AdministratorDTO>> GetAllAsync(int page, int size)
     {
         try
         {
-            var administrators = await _administratorRepository.GetAllAsync(page, size);
-            return _mapper.Map<IEnumerable<AdministratorDTO>>(administrators);
+            var administrators = await administratorRepository.GetAllAsync(page, size);
+            return mapper.Map<IEnumerable<AdministratorDTO>>(administrators);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error occurred while getting all administrators.");
+            logger.LogError(ex, "Error occurred while getting all administrators.");
             throw;
         }
     }
 
     public async Task<string> GetAllAdministratorWithSSOAsync(int page, int size)
     {
-        var dbAdministrators = await _administratorRepository.GetAllAsync(page, size);
-        var administratorsWithSSO = await _keycloakService.GetEntitiesWithSSOAsync<AdministratorDTO, Administrator>(
+        var dbAdministrators = await administratorRepository.GetAllAsync(page, size);
+        var administratorsWithSSO = await keycloakService.GetEntitiesWithSSOAsync<AdministratorDTO, Administrator>(
             dbAdministrators,
             admin => admin.User.KeycloakId.ToString()
         );
 
         //await Task.WhenAll(administratorsWithSSO.Select(admin => UpdateDoctorsAndPatients(admin, page, size)));
 
-        return _keycloakService.Serialize(administratorsWithSSO);
+        return keycloakService.Serialize(administratorsWithSSO);
     }
 
     public async Task<string> GetByIdAsync(Guid id)
     {
         try
         {
-            var dbAdministrator = await _administratorRepository.GetByIdAsync(id) ??
+            var dbAdministrator = await administratorRepository.GetByIdAsync(id) ??
                                   throw new KeyNotFoundException($"Administrator with ID: {id} was not found.");
-            var administratorWithSSO = await _keycloakService.GetEntityWithSSOAsync<AdministratorDTO, Administrator>(
+            var administratorWithSSO = await keycloakService.GetEntityWithSSOAsync<AdministratorDTO, Administrator>(
                 dbAdministrator,
                 admin => admin.User.KeycloakId.ToString()
             );
 
             //await UpdateDoctorsAndPatients(administratorWithSSO, 1, int.MaxValue);
-            return _keycloakService.Serialize(administratorWithSSO);
+            return keycloakService.Serialize(administratorWithSSO);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Error occurred while getting administrator with ID: {id}");
+            logger.LogError(ex, $"Error occurred while getting administrator with ID: {id}");
             throw new Exception($"Error occurred while processing administrator with ID: {id}", ex);
         }
     }
 
-    public async Task CreateAsync(AdministratorDTO administratorDto)
+    public async Task CreateAsync(AdministratorDTO administratorDto, string keycloakId)
     {
+        await userRepository.BeginTransactionAsync();
         try
         {
-            _logger.LogInformation("Начало создания администратора.");
+            var newUserId = Guid.NewGuid();
+            var newAdministratorId = Guid.NewGuid();
 
-            _logger.LogInformation("Попытка найти больницу с ID: {ManagedHospitalId}",
-                administratorDto.ManagedHospitalId);
-            var hospital = await _hospitalRepository.GetByIdAsync(administratorDto.ManagedHospitalId);
-            if (hospital == null)
+            var defaultAdminRole = await userRepository.GetRoleByNameAsync("Administrator");
+            if (defaultAdminRole == null)
+                throw new Exception("Default administrator role not found.");
+
+            var newUser = new User
             {
-                _logger.LogError("Больница с ID {ManagedHospitalId} не найдена.", administratorDto.ManagedHospitalId);
+                Id = newUserId,
+                KeycloakId = keycloakId,
+                RoleId = defaultAdminRole.Id,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            await userRepository.CreateAsync(newUser);
+
+            var hospital = await hospitalRepository.GetByIdAsync(administratorDto.ManagedHospitalId);
+            if (hospital == null)
                 throw new Exception("Hospital not found.");
-            }
 
-            _logger.LogInformation("Больница с ID: {ManagedHospitalId} найдена.", administratorDto.ManagedHospitalId);
+            var administrator = new Administrator
+            {
+                Id = newAdministratorId,
+                UserId = newUserId,
+                ManagedHospitalId = administratorDto.ManagedHospitalId,
+                IsActive = true
+            };
+            await administratorRepository.CreateAsync(administrator);
 
-
-            _logger.LogInformation("Маппинг AdministratorDTO в Administrator.");
-            var administrator = _mapper.Map<Administrator>(administratorDto);
-            _logger.LogInformation("Маппинг успешно выполнен. Администратор готов к сохранению.");
-
-
-            _logger.LogInformation("Попытка сохранить администратора с ID: {AdministratorId}.", administrator.Id);
-            await _administratorRepository.CreateAsync(administrator);
-            _logger.LogInformation("Администратор с ID: {AdministratorId} успешно сохранен.", administrator.Id);
-
-
-            _logger.LogInformation("Попытка добавить администратора в коллекцию больницы.");
             hospital.Administrators.Add(administrator);
-            _logger.LogInformation("Администратор добавлен в коллекцию больницы.");
+            await hospitalRepository.UpdateAsync(hospital);
 
-
-            _logger.LogInformation("Попытка обновить больницу с ID: {ManagedHospitalId}.",
-                administratorDto.ManagedHospitalId);
-            await _hospitalRepository.UpdateAsync(hospital);
-            _logger.LogInformation("Больница с ID: {ManagedHospitalId} успешно обновлена.",
-                administratorDto.ManagedHospitalId);
-
-            _logger.LogInformation("Администратор успешно создан.");
+            await userRepository.CommitTransactionAsync();
         }
-        catch (Exception ex)
+        catch
         {
-            _logger.LogError(ex, "Ошибка при создании администратора.");
+            await userRepository.RollbackTransactionAsync();
             throw;
         }
     }
+
 
 
     public async Task UpdateAsync(AdministratorDTO administratorDto)
     {
         try
         {
-            var administrator = _mapper.Map<Administrator>(administratorDto);
-            await _administratorRepository.UpdateAsync(administrator);
+            var administrator = mapper.Map<Administrator>(administratorDto);
+            await administratorRepository.UpdateAsync(administrator);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error occurred while updating administrator.");
+            logger.LogError(ex, "Error occurred while updating administrator.");
             throw;
         }
     }
@@ -144,11 +133,11 @@ public class AdministratorService : IAdministratorService
     {
         try
         {
-            await _administratorRepository.SoftDeleteAsync(id);
+            await administratorRepository.SoftDeleteAsync(id);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Error occurred while soft deleting administrator with ID: {id}");
+            logger.LogError(ex, $"Error occurred while soft deleting administrator with ID: {id}");
             throw;
         }
     }
@@ -164,8 +153,8 @@ public class AdministratorService : IAdministratorService
 
     private async Task UpdateDoctors(IEnumerable<DoctorDTO> doctors, int page, int size)
     {
-        var doctorEntities = await _keycloakService.GetEntitiesWithSSOAsync<DoctorDTO, Doctor>(
-            await _doctorRepository.GetAllAsync(page, size),
+        var doctorEntities = await keycloakService.GetEntitiesWithSSOAsync<DoctorDTO, Doctor>(
+            await doctorRepository.GetAllAsync(page, size),
             doctor => doctor.User.KeycloakId.ToString()
         );
 
@@ -190,8 +179,8 @@ public class AdministratorService : IAdministratorService
 
     private async Task UpdatePatients(IEnumerable<PatientDTO> patients, int page, int size)
     {
-        var patientEntities = await _keycloakService.GetEntitiesWithSSOAsync<PatientDTO, Patient>(
-            await _patientRepository.GetAllAsync(page, size),
+        var patientEntities = await keycloakService.GetEntitiesWithSSOAsync<PatientDTO, Patient>(
+            await patientRepository.GetAllAsync(page, size),
             patient => patient.User.KeycloakId.ToString()
         );
 

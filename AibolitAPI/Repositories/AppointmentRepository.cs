@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AibolitAPI.Repositories;
 
-public class AppointmentRepository : Repository<Appointment>,IAppointmentRepository
+public class AppointmentRepository : Repository<Appointment>, IAppointmentRepository
 {
     private readonly AibolitDbContext _context;
 
@@ -59,7 +59,7 @@ public class AppointmentRepository : Repository<Appointment>,IAppointmentReposit
         appointment.IsActive = false;
         await _context.SaveChangesAsync();
     }
-    
+
     public async Task<List<Appointment>> GetUpcomingAppointmentsAsync()
     {
         var now = DateTime.UtcNow;
@@ -73,19 +73,33 @@ public class AppointmentRepository : Repository<Appointment>,IAppointmentReposit
     {
         var now = DateTime.UtcNow;
 
-        return await _context.Appointments
+        var appointments = await _context.Appointments
             .Where(a => a.DoctorId == doctorId && a.Doctor.IsActive && a.AppointmentDate > now && a.IsScheduled)
             .OrderBy(a => a.AppointmentDate)
             .ToListAsync();
+
+        var kievTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Kiev");
+        foreach (var appointment in appointments)
+            appointment.AppointmentDate = TimeZoneInfo.ConvertTimeFromUtc(appointment.AppointmentDate, kievTimeZone);
+
+        return appointments;
     }
+
 
     public async Task<IEnumerable<Appointment>> GetAppointmentsByPatientIdAsync(Guid patientId)
     {
-        return await _context.Set<Appointment>()
+        var appointments = await _context.Set<Appointment>()
             .Where(a => a.PatientId == patientId)
             .OrderByDescending(a => a.AppointmentDate)
             .ToListAsync();
+
+        var kievTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Kiev");
+        foreach (var appointment in appointments)
+            appointment.AppointmentDate = TimeZoneInfo.ConvertTimeFromUtc(appointment.AppointmentDate, kievTimeZone);
+
+        return appointments;
     }
+
 
     public async Task CancelAppointmentAsync(Guid appointmentId)
     {

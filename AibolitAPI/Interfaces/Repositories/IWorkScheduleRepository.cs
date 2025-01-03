@@ -5,4 +5,6 @@ namespace AibolitAPI.Interfaces;
 public interface IWorkScheduleRepository : IRepository<WorkSchedule>
 {
     Task<List<WorkSchedule>> GetByIdsAsync(IEnumerable<Guid> ids);
+    Task<List<WorkSchedule>> GetSchedulesForDoctorAsync(Guid doctorId, DayOfWeek dayOfWeek);
+    Task CreateWorkScheduleAsync(WorkSchedule workSchedule, TimeZoneInfo timeZoneInfo);
 }

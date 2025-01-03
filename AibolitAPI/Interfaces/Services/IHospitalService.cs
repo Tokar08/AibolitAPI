@@ -9,13 +9,21 @@ public interface IHospitalService
     Task CreateAsync(HospitalDTO hospitalDto);
     Task UpdateAsync(HospitalDTO hospitalDto);
     Task SoftDeleteAsync(Guid id);
-    Task<string> GetPatientsForDoctorAsync(Guid hospitalId, Guid doctorId, int page, int size);
-    Task<IEnumerable<PrescriptionDTO>> GetPatientPrescriptionsAsync(Guid hospitalId, Guid doctorId, Guid patientId);
-    Task<IEnumerable<RecommendationDTO>> GetPatientRecommendationsAsync(Guid hospitalId, Guid doctorId, Guid patientId);
+
+    Task<string> GetPatientsForDoctorAsync(Guid hospitalId, Guid doctorId, int page, int size,
+        PatientFilterDTO? filterDto);
+
+    Task<IEnumerable<PrescriptionDTO>> GetPatientPrescriptionsAsync(Guid hospitalId, Guid doctorId, Guid patientId,
+        PrescriptionFilterDTO? filterDto);
+
+    Task<IEnumerable<RecommendationDTO>> GetPatientRecommendationsAsync(Guid hospitalId, Guid doctorId, Guid patientId,
+        RecommendationFilterDTO? filterDto);
+
     Task<string> GetPatientInfoAsync(Guid hospitalId, Guid doctorId, Guid patientId);
     Task<string> GetAllHospitalsWithDetailsAsync(int page, int pageSize);
     Task<string> GetDoctorWithPatientsAsync(Guid hospitalId, Guid doctorId, int page, int size);
-    Task<string> GetDoctorsByHospitalIdAsync(Guid hospitalId, int page, int size);
+    Task<string> GetDoctorsByHospitalIdAsync(Guid hospitalId, DoctorFilterDTO? filterDto, int page, int size);
+
 
     Task<object> GetPatientRecommendationByIdAsync(Guid hospitalId, Guid doctorId,
         Guid patientId, Guid recommendationId);

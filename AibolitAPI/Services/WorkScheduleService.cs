@@ -51,8 +51,9 @@ public class WorkScheduleService : IWorkScheduleService
     {
         try
         {
+            var kievTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Kiev");
             var workSchedule = _mapper.Map<WorkSchedule>(workScheduleDto);
-            await _workScheduleRepository.CreateAsync(workSchedule);
+            await _workScheduleRepository.CreateWorkScheduleAsync(workSchedule, kievTimeZone);
         }
         catch (Exception ex)
         {

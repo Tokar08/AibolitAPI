@@ -1,5 +1,6 @@
 ﻿using AibolitAPI.DTOs;
 using AibolitAPI.Interfaces;
+using AibolitAPI.Interfaces.Services;
 using AibolitAPI.Models;
 using AutoMapper;
 
@@ -19,7 +20,9 @@ public class DoctorService(
     IEmailTemplateFactory templateFactory,
     IUserRepository userRepository,
     ISpecializationRepository specializationRepository,
-    IWorkScheduleRepository workScheduleRepository)
+    IWorkScheduleRepository workScheduleRepository,
+    IFilterService filterService,
+    ICloudStorageService cloudStorageService)
     : IDoctorService
 {
     public async Task<IEnumerable<DoctorDTO>> GetAllAsync(int page, int size)
@@ -36,7 +39,7 @@ public class DoctorService(
         }
     }
 
-    public async Task<string> GetAllDoctorsWithSSOAsync(int page, int size)
+    public async Task<string> GetAllDoctorsWithSSOAsync(int page, int size, DoctorFilterDTO? filterDto = null)
     {
         var dbDoctors = await doctorRepository.GetAllAsync(page, size);
         var doctorEntities = await keycloakService.GetEntitiesWithSSOAsync<DoctorDTO, Doctor>(
@@ -44,10 +47,14 @@ public class DoctorService(
             doctor => doctor.User.KeycloakId.ToString()
         );
 
-        foreach (var doctor in doctorEntities) await UpdatePatientsForDoctor(doctor, page, size);
+        foreach (var doctor in doctorEntities)
+            await UpdatePatientsForDoctor(doctor, page, size);
 
+
+        doctorEntities = filterService.ApplyDoctorFilter(doctorEntities, filterDto, dbDoctors);
         return keycloakService.Serialize(doctorEntities.Where(d => d.IsActive));
     }
+
 
     public async Task<string> GetByIdAsync(Guid id)
     {
@@ -76,25 +83,28 @@ public class DoctorService(
         }
     }
 
-    public async Task<string> GetPatientsForDoctorAsync(Guid doctorId, int page, int size)
+    public async Task<string> GetPatientsForDoctorAsync(Guid doctorId, int page, int size, PatientFilterDTO? filterDto)
     {
         var doctor = await doctorRepository.GetByIdAsync(doctorId);
         if (doctor == null)
             throw new KeyNotFoundException($"Doctor with ID: {doctorId} not found.");
 
-
-        var patients = doctor.Patients.Where(p => p.Doctors.Any(d => d.Id == doctorId)).Skip((page - 1) * size)
-            .Take(size).ToList();
+        var patients = doctor.Patients
+            .Where(p => p.Doctors.Any(d => d.Id == doctorId))
+            .Skip((page - 1) * size)
+            .Take(size)
+            .ToList();
 
         var patientEntities = await keycloakService.GetEntitiesWithSSOAsync<PatientDTO, Patient>(
             patients,
             patient => patient.User.KeycloakId.ToString()
         );
 
-        var patientDTOs = patientEntities.ToList();
+        var filteredPatients = filterService.ApplyPatientFilter(patientEntities, filterDto);
 
-        return keycloakService.Serialize(patientDTOs);
+        return keycloakService.Serialize(filteredPatients.ToList());
     }
+
 
     public async Task<string> GetPatientByIdAsync(Guid doctorId, Guid patientId)
     {
@@ -113,27 +123,43 @@ public class DoctorService(
         return keycloakService.Serialize(patientEntity);
     }
 
-    public async Task<string> GetPrescriptionsForPatientAsync(Guid doctorId, Guid patientId)
+    public async Task<string> GetPrescriptionsForPatientAsync(Guid doctorId, Guid patientId,
+        PrescriptionFilterDTO? filterDto)
     {
         var medicalRecord = await medicalRecordRepository.GetByPatientIdAsync(patientId);
 
         if (medicalRecord == null)
             throw new KeyNotFoundException("Prescriptions not found for this patient and doctor.");
 
-        var prescriptions = medicalRecord.Prescriptions.Where(p => p.IsActive).ToList();
-        return keycloakService.Serialize(prescriptions);
+        var prescriptions = medicalRecord.Prescriptions
+            .Where(p => p.IsActive)
+            .ToList();
+
+        var prescriptionDTOs = mapper.Map<IEnumerable<PrescriptionDTO>>(prescriptions);
+        var filteredPrescriptions = filterService.ApplyPrescriptionFilter(prescriptionDTOs, filterDto);
+
+        return keycloakService.Serialize(filteredPrescriptions.ToList());
     }
 
-    public async Task<string> GetRecommendationsForPatientAsync(Guid doctorId, Guid patientId)
+
+    public async Task<string> GetRecommendationsForPatientAsync(Guid doctorId, Guid patientId,
+        RecommendationFilterDTO? filterDto)
     {
         var medicalRecord = await medicalRecordRepository.GetByPatientIdAsync(patientId);
 
         if (medicalRecord == null)
-            throw new KeyNotFoundException("Recommendations not found for this patient and doctor.");
+            throw new KeyNotFoundException($"No recommendations found for patient with ID {patientId}.");
 
-        var recommendations = medicalRecord.Recommendations.Where(r => r.IsActive).ToList();
-        return keycloakService.Serialize(recommendations);
+        var recommendations = medicalRecord.Recommendations
+            .Where(r => r.IsActive)
+            .ToList();
+
+        var recommendationDTOs = mapper.Map<IEnumerable<RecommendationDTO>>(recommendations);
+        var filteredRecommendations = filterService.ApplyRecommendationFilter(recommendationDTOs, filterDto);
+
+        return keycloakService.Serialize(filteredRecommendations);
     }
+
 
     public async Task<object> GetPatientPrescriptionByIdAsync(Guid doctorId, Guid patientId, Guid prescriptionId)
     {
@@ -207,17 +233,22 @@ public class DoctorService(
         };
     }
 
-    public async Task<IEnumerable<AppointmentDTO>> GetScheduledAppointmentsByDoctorIdAsync(Guid doctorId)
+    public async Task<IEnumerable<AppointmentDTO>> GetScheduledAppointmentsByDoctorIdAsync(Guid doctorId,
+        AppointmentFilterDTO? filterDto, int page, int size)
     {
         var appointments = await appointmentRepository.GetAppointmentsByDoctorIdAsync(doctorId);
 
-        var scheduledAppointments = appointments
-            .Where(a => a.IsScheduled)
-            .OrderBy(a => a.AppointmentDate)
+        var appointmentDTOs = mapper.Map<IEnumerable<AppointmentDTO>>(appointments);
+
+        var filteredAppointments = filterService
+            .ApplyAppointmentFilter(appointmentDTOs, filterDto)
+            .Skip((page - 1) * size)
+            .Take(size)
             .ToList();
 
-        return mapper.Map<IEnumerable<AppointmentDTO>>(scheduledAppointments);
+        return filteredAppointments;
     }
+
 
     public async Task CancelAppointmentAsync(Guid doctorId, Guid appointmentId)
     {
@@ -295,7 +326,7 @@ public class DoctorService(
 
             if (photoStream != null && !string.IsNullOrWhiteSpace(fileName))
             {
-                var uploadedPhotoUrl = await doctorRepository.UploadPhotoAsync(photoStream, fileName);
+                var uploadedPhotoUrl = await cloudStorageService.UploadPhotoAsync(photoStream, fileName);
                 doctor.PhotoUrl = uploadedPhotoUrl;
             }
 
@@ -319,14 +350,27 @@ public class DoctorService(
                                  ?? throw new KeyNotFoundException($"Doctor with ID {id} not found.");
 
             var oldPhotoUrl = existingDoctor.PhotoUrl;
+
+            if (!string.IsNullOrWhiteSpace(doctorDto.SpecializationTitle))
+            {
+                var specialization = await specializationRepository
+                    .GetByTitleAsync(doctorDto.SpecializationTitle);
+
+                if (specialization == null)
+                    throw new KeyNotFoundException(
+                        $"Specialization with title '{doctorDto.SpecializationTitle}' not found.");
+
+                existingDoctor.SpecializationId = specialization.Id;
+            }
+
             mapper.Map(doctorDto, existingDoctor);
 
             if (photoStream != null && !string.IsNullOrWhiteSpace(fileName))
             {
                 if (!string.IsNullOrWhiteSpace(oldPhotoUrl))
-                    await doctorRepository.DeletePhotoAsync(oldPhotoUrl);
+                    await cloudStorageService.DeletePhotoAsync(oldPhotoUrl);
 
-                existingDoctor.PhotoUrl = await doctorRepository.UploadPhotoAsync(photoStream, fileName);
+                existingDoctor.PhotoUrl = await cloudStorageService.UploadPhotoAsync(photoStream, fileName);
             }
 
             if (string.IsNullOrWhiteSpace(existingDoctor.PhotoUrl))
@@ -342,6 +386,7 @@ public class DoctorService(
             throw;
         }
     }
+
 
     public async Task UpdateDoctorSchedulesAsync(Guid doctorId, IEnumerable<WorkScheduleDTO> scheduleDtos)
     {
@@ -373,10 +418,24 @@ public class DoctorService(
             throw new KeyNotFoundException($"Doctor with ID {doctorId} not found.");
 
         var schedules = doctor.WorkSchedules;
+        var kievTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Kiev");
+
+        foreach (var schedule in schedules)
+        {
+            var today = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Unspecified);
+
+            var startTimeUtc = DateTime.SpecifyKind(today + schedule.StartTime, DateTimeKind.Utc);
+            var endTimeUtc = DateTime.SpecifyKind(today + schedule.EndTime, DateTimeKind.Utc);
+
+            schedule.StartTime = TimeZoneInfo.ConvertTimeFromUtc(startTimeUtc, kievTimeZone).TimeOfDay;
+            schedule.EndTime = TimeZoneInfo.ConvertTimeFromUtc(endTimeUtc, kievTimeZone).TimeOfDay;
+        }
+
         var scheduleDtos = mapper.Map<List<WorkScheduleDTO>>(schedules);
 
         return scheduleDtos;
     }
+
 
     public async Task SoftDeleteAsync(Guid id)
     {
@@ -384,7 +443,7 @@ public class DoctorService(
         {
             var doctor = await doctorRepository.GetByIdAsync(id);
             if (doctor != null && !string.IsNullOrWhiteSpace(doctor.PhotoUrl))
-                await doctorRepository.DeletePhotoAsync(doctor.PhotoUrl);
+                await cloudStorageService.DeletePhotoAsync(doctor.PhotoUrl);
 
             await doctorRepository.SoftDeleteAsync(id);
         }

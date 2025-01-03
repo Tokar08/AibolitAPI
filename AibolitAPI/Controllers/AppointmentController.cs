@@ -9,11 +9,14 @@ namespace AibolitAPI.Controllers;
 public class AppointmentController(IAppointmentService appointmentService) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<AppointmentDTO>>> GetAllAsync(int page = 1, int size = 10)
+    public async Task<ActionResult<IEnumerable<AppointmentDTO>>> GetAllAsync(
+        [FromQuery] AppointmentFilterDTO? filterDto,
+        int page = 1,
+        int size = 10)
     {
         try
         {
-            var appointments = await appointmentService.GetAllAsync(page, size);
+            var appointments = await appointmentService.GetAllAsync(filterDto, page, size);
             return Ok(appointments);
         }
         catch (Exception ex)
@@ -21,6 +24,7 @@ public class AppointmentController(IAppointmentService appointmentService) : Con
             return BadRequest(new { message = ex.Message });
         }
     }
+
 
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<AppointmentDTO>> GetByIdAsync(Guid id)

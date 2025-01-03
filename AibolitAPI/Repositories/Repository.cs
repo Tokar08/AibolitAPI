@@ -10,7 +10,7 @@ namespace AibolitAPI.Repositories;
 public class Repository<T> : IRepository<T> where T : class
 {
     protected readonly AibolitDbContext _context;
-    private readonly DbSet<T> _dbSet;
+    protected readonly DbSet<T> _dbSet;
     private IDbContextTransaction? _currentTransaction;
 
     protected Repository(AibolitDbContext context)

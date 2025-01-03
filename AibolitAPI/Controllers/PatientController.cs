@@ -1,7 +1,6 @@
 ﻿using AibolitAPI.DTOs;
 using AibolitAPI.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Serilog;
 
 namespace AibolitAPI.Controllers;
 
@@ -9,12 +8,20 @@ namespace AibolitAPI.Controllers;
 [ApiController]
 public class PatientController(IPatientService patientService) : ControllerBase
 {
+    [HttpGet("doctors/{doctorId:guid}/slots")]
+    public async Task<IActionResult> GetAvailableSlots(Guid doctorId, [FromQuery] DateTime date)
+    {
+        var slots = await patientService.GetAvailableSlotsAsync(doctorId, date);
+        return Ok(slots);
+    }
+
     [HttpGet("{patientId:guid}/appointments")]
-    public async Task<IActionResult> GetAllAppointmentsAsync(Guid patientId, int page = 1, int size = 10)
+    public async Task<IActionResult> GetAllAppointmentsAsync(Guid patientId, [FromQuery] AppointmentFilterDTO filterDto,
+        int page = 1, int size = 10)
     {
         try
         {
-            var appointmentsJson = await patientService.GetAllAppointmentsAsync(patientId, page, size);
+            var appointmentsJson = await patientService.GetAllAppointmentsAsync(patientId, filterDto, page, size);
             return Content(appointmentsJson, "application/json");
         }
         catch (Exception ex)
@@ -23,18 +30,18 @@ public class PatientController(IPatientService patientService) : ControllerBase
         }
     }
 
+
     [HttpPost("{doctorId:guid}/appointments")]
     public async Task<IActionResult> CreateAppointment(Guid doctorId, Guid patientId,
         [FromQuery] DateTime appointmentDate)
     {
         try
         {
-            var ukraineTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Kiev");
-            var appointmentDateUtc = TimeZoneInfo.ConvertTimeToUtc(appointmentDate, ukraineTimeZone);
+            var kievTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Kiev");
+            var localDateTime = DateTime.SpecifyKind(appointmentDate, DateTimeKind.Unspecified);
+            var appointmentDateUtc = TimeZoneInfo.ConvertTimeToUtc(localDateTime, kievTimeZone);
 
             await patientService.CreateAppointmentAsync(doctorId, patientId, appointmentDateUtc);
-            Log.Information(
-                $"Creating appointment: DoctorId={doctorId}, PatientId={patientId}, AppointmentDate={appointmentDateUtc}");
             return Ok(new { message = "Appointment successfully created." });
         }
         catch (Exception ex)
@@ -59,11 +66,12 @@ public class PatientController(IPatientService patientService) : ControllerBase
     }
 
     [HttpGet("doctors")]
-    public async Task<IActionResult> GetDoctorsAsync(int page = 1, int size = 10)
+    public async Task<IActionResult> GetDoctorsAsync([FromQuery] DoctorFilterDTO? filterDto, int page = 1,
+        int size = 10)
     {
         try
         {
-            var doctors = await patientService.GetAllDoctorsAsyncWithSSO(page, size);
+            var doctors = await patientService.GetAllDoctorsAsyncWithSSO(filterDto, page, size);
             return Content(doctors, "application/json");
         }
         catch (Exception ex)
@@ -73,12 +81,13 @@ public class PatientController(IPatientService patientService) : ControllerBase
     }
 
 
-    [HttpGet("favorites")]
-    public async Task<IActionResult> GetFavoriteDoctors(Guid patientId, int page = 1, int size = 10)
+    [HttpGet("{patientId:guid}/favorites")]
+    public async Task<IActionResult> GetFavoriteDoctors(Guid patientId, [FromQuery] DoctorFilterDTO? filterDto,
+        int page = 1, int size = 10)
     {
         try
         {
-            var favoriteDoctors = await patientService.GetFavoriteDoctorsWithSSOAsync(patientId, page, size);
+            var favoriteDoctors = await patientService.GetFavoriteDoctorsWithSSOAsync(patientId, filterDto, page, size);
             return Content(favoriteDoctors, "application/json");
         }
         catch (Exception ex)
@@ -86,6 +95,7 @@ public class PatientController(IPatientService patientService) : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+
 
     [HttpPost("{patientId:guid}/favorite/{doctorId:guid}")]
     public async Task<IActionResult> AddDoctorToFavorites(Guid patientId, Guid doctorId)
@@ -101,7 +111,7 @@ public class PatientController(IPatientService patientService) : ControllerBase
         }
     }
 
-    [HttpDelete("favorites/{doctorId:guid}")]
+    [HttpDelete("{patientId:guid}/favorites/{doctorId:guid}")]
     public async Task<IActionResult> RemoveDoctorFromFavoritesAsync(Guid patientId, Guid doctorId)
     {
         try
@@ -115,12 +125,13 @@ public class PatientController(IPatientService patientService) : ControllerBase
         }
     }
 
+
     [HttpGet("{patientId:guid}/prescriptions")]
-    public async Task<IActionResult> GetPrescriptions(Guid patientId)
+    public async Task<IActionResult> GetPrescriptions(Guid patientId, [FromQuery] PrescriptionFilterDTO? filterDto)
     {
         try
         {
-            var prescriptions = await patientService.GetPrescriptionsForPatientAsync(patientId);
+            var prescriptions = await patientService.GetPrescriptionsForPatientAsync(patientId, filterDto);
             return Content(prescriptions, "application/json");
         }
         catch (Exception ex)
@@ -129,12 +140,15 @@ public class PatientController(IPatientService patientService) : ControllerBase
         }
     }
 
+
     [HttpGet("{patientId:guid}/recommendations")]
-    public async Task<IActionResult> GetRecommendations(Guid patientId)
+    public async Task<IActionResult> GetRecommendations(
+        Guid patientId,
+        [FromQuery] RecommendationFilterDTO? filterDto)
     {
         try
         {
-            var recommendations = await patientService.GetRecommendationsForPatientAsync(patientId);
+            var recommendations = await patientService.GetRecommendationsForPatientAsync(patientId, filterDto);
             return Content(recommendations, "application/json");
         }
         catch (Exception ex)
@@ -142,6 +156,7 @@ public class PatientController(IPatientService patientService) : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+
 
     [HttpGet("{patientId:guid}/prescriptions/{prescriptionId:guid}")]
     public async Task<IActionResult> GetPrescriptionById(Guid patientId, Guid prescriptionId)
@@ -173,11 +188,12 @@ public class PatientController(IPatientService patientService) : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<PatientDTO>>> GetAllAsync(int page = 1, int size = 10)
+    public async Task<ActionResult<IEnumerable<PatientDTO>>> GetAllAsync([FromQuery] PatientFilterDTO? filterDto,
+        int page = 1, int size = 10)
     {
         try
         {
-            var patients = await patientService.GetAllPatientsWithSSOAsync(page, size);
+            var patients = await patientService.GetAllPatientsWithSSOAsync(page, size, filterDto);
             return new ContentResult
             {
                 Content = patients,
@@ -189,6 +205,7 @@ public class PatientController(IPatientService patientService) : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+
 
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<PatientDTO>> GetByIdAsync(Guid id)
